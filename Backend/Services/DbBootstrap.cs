@@ -10,6 +10,17 @@ public static class DbBootstrap
     public static void Run(AppDbContext db)
     {
         db.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS pending_admin_registrations (
+                id uuid PRIMARY KEY,
+                full_name text NOT NULL,
+                username text NOT NULL,
+                email text NOT NULL UNIQUE,
+                password_hash text NOT NULL,
+                code_hash text NOT NULL,
+                expires_at timestamptz NOT NULL,
+                last_sent_at timestamptz NOT NULL,
+                failed_attempts integer NOT NULL DEFAULT 0
+            );
             ALTER TABLE users ADD COLUMN IF NOT EXISTS staff_code text;
             ALTER TABLE users ADD COLUMN IF NOT EXISTS phone text;
             ALTER TABLE users ADD COLUMN IF NOT EXISTS ""position"" text;
