@@ -226,10 +226,11 @@ app.Use(async (context, next) =>
                 return;
             }
         }
-        else if (context.User.Identity?.IsAuthenticated == true)
+        else if (context.Request.Headers.TryGetValue("Sec-Fetch-Site", out var site) &&
+                 site.ToString() is not ("same-origin" or "none"))
         {
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
-            await context.Response.WriteAsJsonAsync(new { message = "Missing request origin." });
+            await context.Response.WriteAsJsonAsync(new { message = "Cross-site request blocked." });
             return;
         }
     }
