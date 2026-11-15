@@ -8,6 +8,7 @@ public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
+    public DbSet<PendingAdminRegistration> PendingAdminRegistrations => Set<PendingAdminRegistration>();
     public DbSet<User> Users => Set<User>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<CollectionState> CollectionStates => Set<CollectionState>();
@@ -24,6 +25,8 @@ public class AppDbContext : DbContext
     {
         // Mga pangalan ng table sa PostgreSQL (makikita sa pgAdmin 4)
         modelBuilder.Entity<User>().ToTable("users");
+        modelBuilder.Entity<PendingAdminRegistration>().ToTable("pending_admin_registrations");
+        modelBuilder.Entity<PendingAdminRegistration>().HasIndex(x => x.Email).IsUnique();
         modelBuilder.Entity<PasswordResetToken>().ToTable("password_reset_tokens");
         modelBuilder.Entity<CollectionState>().ToTable("collection_states");
         modelBuilder.Entity<InventoryItem>().ToTable("inventory_items");
