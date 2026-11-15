@@ -31,6 +31,12 @@ public class LoginRequest
     public bool RememberMe { get; set; }
 }
 
+public class DeleteAdminAccountRequest
+{
+    public string Password { get; set; } = "";
+    public string Confirmation { get; set; } = "";
+}
+
 public class ChangePasswordRequest
 {
     public string CurrentPassword { get; set; }
@@ -326,6 +332,41 @@ public class AuthController : ControllerBase
         await _db.SaveChangesAsync();
 
         return Ok(new { message = "Password updated successfully." });
+    }
+
+    /* ---------- DELETE OWN ADMIN ACCOUNT ---------- */
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost("delete-admin-account")]
+    public async Task<IActionResult> DeleteAdminAccount([FromBody] DeleteAdminAccountRequest request)
+    {
+        if (request == null || request.Confirmation != "DELETE MY ADMIN ACCOUNT")
+            return BadRequest(new { message = "Type DELETE MY ADMIN ACCOUNT to confirm." });
+
+        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id))
+            return Unauthorized(new { message = "Not logged in." });
+
+        var admin = await _db.Users.FirstOrDefaultAsync(u => u.Id == id && u.Role == "Admin");
+        if (admin == null)
+            return Forbid();
+
+        if (!PasswordHasher.Verify(request.Password ?? "", admin.PasswordHash))
+            return Unauthorized(new { message = "Incorrect Admin password." });
+
+        await using var transaction = await _db.Database.BeginTransactionAsync();
+        var tokens = await _db.PasswordResetTokens.Where(t => t.UserId == id).ToListAsync();
+        _db.PasswordResetTokens.RemoveRange(tokens);
+        // Preserve orders and records; detach any assignments referencing this account.
+        var assignedOrders = await _db.PrintOrders.Where(o => o.AssignedStaffId == id).ToListAsync();
+        foreach (var order in assignedOrders) order.AssignedStaffId = null;
+        var attendance = await _db.AttendanceRecords.Where(a => a.StaffUserId == id).ToListAsync();
+        foreach (var record in attendance) record.StaffUserId = null;
+        Audit.Add(_db, id, admin.Username, "Admin", "Admin account deleted", "Self-service account removal");
+        _db.Users.Remove(admin);
+        await _db.SaveChangesAsync();
+        await transaction.CommitAsync();
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return Ok(new { message = "Admin account deleted. You may register a new Admin." });
     }
 
     /* ---------- FORGOT PASSWORD ---------- */
