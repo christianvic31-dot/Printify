@@ -176,20 +176,6 @@ app.Use(async (context, next) =>
     await next();
 });
 
-if (!app.Environment.IsDevelopment())
-{
-    app.Use(async (context, next) =>
-    {
-        if (false && string.Equals(context.Request.Path.Value, "/register.html", StringComparison.OrdinalIgnoreCase))
-        {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            return;
-        }
-
-        await next();
-    });
-}
-
 var defaultFiles = new DefaultFilesOptions { FileProvider = frontendFiles };
 defaultFiles.DefaultFileNames.Clear();
 defaultFiles.DefaultFileNames.Add("login.html");
