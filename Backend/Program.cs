@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -110,6 +111,30 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+// Rate limits for public authentication endpoints. Each client IP gets its own bucket.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+    {
+        var path = context.Request.Path.Value ?? "";
+        var isSensitive = path.StartsWith("/api/auth/login", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("/api/auth/register", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("/api/auth/verify-email", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("/api/auth/forgot-password", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("/api/auth/reset-password", StringComparison.OrdinalIgnoreCase);
+        var key = (context.Connection.RemoteIpAddress?.ToString() ?? "unknown")
+            + (isSensitive ? ":auth" : ":general");
+        return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = isSensitive ? 20 : 300,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
+            AutoReplenishment = true
+        });
+    });
+});
+
 var app = builder.Build();
 
 /* ==========================================
@@ -173,6 +198,41 @@ app.Use(async (context, next) =>
     context.Response.Headers["Referrer-Policy"] = "same-origin";
     context.Response.Headers["X-Content-Type-Options"] = "nosniff";
     context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+    if (context.Request.Path.StartsWithSegments("/api"))
+    {
+        context.Response.Headers["Cache-Control"] = "no-store";
+        context.Response.Headers["Pragma"] = "no-cache";
+    }
+
+    // Reject cross-site state-changing API requests, including cookie-based CSRF.
+    // A same-origin browser POST sends Origin; Referer is a fallback for older clients.
+    if (context.Request.Path.StartsWithSegments("/api") &&
+        !HttpMethods.IsGet(context.Request.Method) &&
+        !HttpMethods.IsHead(context.Request.Method) &&
+        !HttpMethods.IsOptions(context.Request.Method))
+    {
+        var origin = context.Request.Headers.Origin.ToString();
+        var referer = context.Request.Headers.Referer.ToString();
+        var source = !string.IsNullOrWhiteSpace(origin) ? origin : referer;
+        if (!string.IsNullOrWhiteSpace(source))
+        {
+            var expected = $"{context.Request.Scheme}://{context.Request.Host}";
+            if (!Uri.TryCreate(source, UriKind.Absolute, out var sourceUri) ||
+                !string.Equals(sourceUri.GetLeftPart(UriPartial.Authority), expected, StringComparison.OrdinalIgnoreCase))
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await context.Response.WriteAsJsonAsync(new { message = "Cross-origin request blocked." });
+                return;
+            }
+        }
+        else if (context.User.Identity?.IsAuthenticated == true)
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            await context.Response.WriteAsJsonAsync(new { message = "Missing request origin." });
+            return;
+        }
+    }
     await next();
 });
 
@@ -187,6 +247,7 @@ app.UseStaticFiles(new StaticFileOptions { FileProvider = frontendFiles });
    6. API
 ========================================== */
 
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
