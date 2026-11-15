@@ -106,10 +106,9 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
-        if (!_environment.IsDevelopment() ||
-            !IPAddress.IsLoopback(HttpContext.Connection.RemoteIpAddress ?? IPAddress.None))
+        if (!_environment.IsDevelopment() && !_environment.IsProduction())
         {
-            return NotFound(new { message = "Admin setup is only available from localhost in Development." });
+            return NotFound(new { message = "Admin setup is unavailable in this environment." });
         }
 
         if (!IsValidSetupToken(request?.SetupToken))
