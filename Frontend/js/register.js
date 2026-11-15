@@ -9,6 +9,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const API_URL = "/api/auth/register";
 
+    // Do not show registration if an Admin account already exists.
+    fetch("/api/auth/admin-registration-status", { cache: "no-store" })
+        .then(response => response.ok ? response.json() : null)
+        .then(data => { if (data && !data.available) window.location.replace("login.html"); })
+        .catch(() => {});
+
     // ELEMENTS
     const registerForm = document.getElementById("registerForm");
 
