@@ -13,6 +13,7 @@ services:
     region: singapore
     plan: free
     dockerfilePath: ./Dockerfile
+    autoDeploy: true
     healthCheckPath: /
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
