@@ -9,10 +9,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const API_URL = "/api/auth/register";
 
-    // Do not show registration if an Admin account already exists.
+    // Keep the registration page visible; explain when Admin registration is closed.
     fetch("/api/auth/admin-registration-status", { cache: "no-store" })
         .then(response => response.ok ? response.json() : null)
-        .then(data => { if (data && !data.available) window.location.replace("login.html"); })
+        .then(data => {
+            if (data && !data.available) {
+                const message = document.getElementById("registerMessage");
+                const button = document.getElementById("registerButton");
+                if (message) {
+                    message.textContent = "An Admin account already exists. Registration is closed until that account is removed.";
+                    message.classList.add("error");
+                }
+                if (button) button.disabled = true;
+            }
+        })
         .catch(() => {});
 
     // ELEMENTS
@@ -322,7 +332,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         registerButtonText.textContent = isLoading
             ? "Creating Account..."
-            : "Create Account";
+            : "Register as Admin";
 
     }
 
