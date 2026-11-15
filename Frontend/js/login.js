@@ -267,3 +267,18 @@ if (loginForm) {
     });
 
 }
+
+// Only show Admin registration while no Admin account exists.
+(async function updateAdminRegistrationLink() {
+    const section = document.getElementById('adminRegisterSection');
+    if (!section) return;
+    try {
+        const response = await fetch('/api/auth/admin-registration-status', { cache: 'no-store' });
+        if (!response.ok) return;
+        const data = await response.json();
+        section.hidden = !data.available;
+        section.style.display = data.available ? 'block' : 'none';
+    } catch (error) {
+        console.warn('Unable to check admin registration availability.');
+    }
+})();
