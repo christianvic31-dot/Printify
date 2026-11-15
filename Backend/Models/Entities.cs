@@ -26,6 +26,19 @@ public class User
     public string Status { get; set; } = "Active";   // Active / On Leave / Inactive
 }
 
+public class PendingAdminRegistration
+{
+    public Guid Id { get; set; }
+    public string FullName { get; set; } = "";
+    public string Username { get; set; } = "";
+    public string Email { get; set; } = "";
+    public string PasswordHash { get; set; } = "";
+    public string CodeHash { get; set; } = "";
+    public DateTime ExpiresAt { get; set; }
+    public DateTime LastSentAt { get; set; }
+    public int FailedAttempts { get; set; }
+}
+
 public class PasswordResetToken
 {
     public Guid Id { get; set; }
