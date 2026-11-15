@@ -193,6 +193,24 @@ app.MapControllers();
 
 app.Logger.LogInformation("Printify is running. Open {Url}", builder.Configuration["Urls"]);
 
+// Open live Printify in the default browser when starting locally on Windows.
+// dotnet run still starts the local development server; the live site is hosted by Render.
+if (app.Environment.IsDevelopment() && OperatingSystem.IsWindows())
+{
+    try
+    {
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "https://printify-j47v.onrender.com/login.html",
+            UseShellExecute = true
+        });
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogWarning("Could not open live Printify website: {Message}", ex.Message);
+    }
+}
+
 app.Run();
 
 static string ToNpgsqlConnectionString(string connectionString)
