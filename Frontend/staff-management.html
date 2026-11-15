@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="js/auth-guard.js" data-role="Admin"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Printify | Staff Management </title>
+
+    <link rel="icon" type="image/png" href="image/printify_logo.png">
+    <link rel="shortcut icon" type="image/png" href="image/printify_logo.png">
+
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/staff-management.css">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+    <script src="js/staff-qr.js" defer></script>
+    <script src="js/staff-management.js" defer></script>
+</head>
+
+<body class="sidebar-hidden">
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+
+        <div class="sidebar-header">
+            <a href="dashboard.html" class="logo">
+                <span class="logo-icon">
+                    <img src="image/printify_logo.png" alt="Printify Logo">
+                </span>
+                <span>Printify</span>
+            </a>
+        </div>
+
+        <div class="sidebar-label">MAIN MENU</div>
+
+        <nav class="sidebar-navigation">
+            <a href="dashboard.html" class="nav-link">
+                <img src="image/dashboard_icon.png" alt="">
+                <span>Dashboard</span>
+            </a>
+
+            <a href="orders.html" class="nav-link">
+                <img src="image/order_icon.png" alt="">
+                <span>Orders</span>
+            </a>
+
+            <a href="inventory.html" class="nav-link">
+                <img src="image/inventory_icon.png" alt="">
+                <span>Inventory</span>
+            </a>
+
+            <a href="staff-management.html" class="nav-link active">
+                <img src="image/staff_icon.png" alt="">
+                <span>Staff Management</span>
+            </a>
+
+            <a href="staff-tracking.html" class="nav-link">
+                <img src="image/stafftracking_icon.png" alt="">
+                <span>Staff Tracking</span>
+            </a>
+
+            <a href="reports.html" class="nav-link">
+                <img src="image/reports_icon.png" alt="">
+                <span>Reports</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-label settings-label">PREFERENCES</div>
+
+        <nav class="sidebar-navigation">
+            <a href="settings.html" class="nav-link">
+                <img src="image/settings_ion.png" alt="">
+                <span>Settings</span>
+            </a>
+        </nav>
+
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content" id="mainContent">
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+
+            <div class="topbar-left">
+
+                <button class="icon-button menu-button"
+                        id="menuToggle"
+                        type="button"
+                        aria-label="Toggle sidebar"
+                        aria-controls="sidebar"
+                        aria-expanded="false">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+
+                <div class="page-heading">
+                    <h1>Staff Management</h1>
+                    <p>Manage staff information and account records.</p>
+                </div>
+
+            </div>
+
+            <div class="topbar-right">
+
+                <div class="current-date" id="currentDate">
+                    <i class="fa-regular fa-calendar"></i>
+                    <span>Loading date...</span>
+                </div>
+
+                <button class="icon-button theme-toggle"
+                        id="themeToggle"
+                        type="button"
+                        aria-label="Switch to dark mode">
+                    <img src="image/nightmode_icon.png"
+                         alt="Switch to dark mode"
+                         id="themeIcon"
+                         class="theme-image-icon">
+                </button>
+
+                <button class="icon-button notification-button"
+                        id="notificationButton"
+                        type="button"
+                        aria-label="Notifications">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="notification-dot"></span>
+                </button>
+
+                <div class="profile-container">
+
+                    <button class="profile-button"
+                            id="profileButton"
+                            type="button"
+                            aria-expanded="false">
+
+                        <div class="profile-avatar">AD</div>
+
+                        <div class="profile-information">
+                            <strong>Administrator</strong>
+                            <span>Admin Account</span>
+                        </div>
+
+                        <i class="fa-solid fa-chevron-down profile-arrow"></i>
+                    </button>
+
+                    <div class="profile-dropdown" id="profileDropdown">
+
+                        <div class="dropdown-profile">
+                            <div class="profile-avatar">AD</div>
+                            <div>
+                                <strong>Administrator</strong>
+                                <span>Admin Account</span>
+                            </div>
+                        </div>
+
+                        <a href="settings.html">
+                            <i class="fa-solid fa-gear"></i>
+                            Account Settings
+                        </a>
+
+                        <button type="button" id="logoutButton">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                            Log Out
+                        </button>
+
+                    </div>
+                </div>
+
+            </div>
+        </header>
+
+        <!-- STAFF MANAGEMENT CONTENT -->
+        <section class="dashboard-content staff-management-content">
+
+            <div class="content-introduction">
+
+                <div>
+                    <h2>Staff Overview</h2>
+                    <p>
+                        View, organize, and manage the staff members
+                        registered in your printing shop.
+                    </p>
+                </div>
+
+                <div class="dashboard-status">
+                    <span class="status-indicator"></span>
+                    Staff Directory
+                </div>
+
+            </div>
+
+            <!-- STAFF DIRECTORY -->
+            <div class="panel staff-directory-panel">
+
+                <div class="staff-directory-heading">
+
+                    <div>
+                        <h2>Staff Directory</h2>
+                        <p>Manage your registered staff information.</p>
+                    </div>
+
+                    <button class="primary-button"
+                            type="button"
+                            id="addStaffButton">
+                        <i class="fa-solid fa-plus"></i>
+                        Add Staff
+                    </button>
+
+                </div>
+
+                <!-- TOOLBAR -->
+                <div class="staff-toolbar">
+
+                    <div class="staff-search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text"
+                               id="searchInput"
+                               placeholder="Search staff name or ID...">
+                    </div>
+
+                    <div class="staff-filters">
+
+                        <select id="positionFilter"
+                                aria-label="Filter by position">
+                            <option value="all">All Positions</option>
+                        </select>
+
+                        <select id="statusFilter"
+                                aria-label="Filter by status">
+                            <option value="all">All Status</option>
+                            <option value="Active">Active</option>
+                            <option value="On Leave">On Leave</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+
+                        <button class="secondary-button"
+                                type="button"
+                                id="resetFiltersButton">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            Reset
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <!-- TABLE -->
+                <div class="table-wrapper staff-table-wrapper">
+
+                    <table class="staff-management-table">
+
+                        <thead>
+                            <tr>
+                                <th>Staff Member</th>
+                                <th>Staff ID</th>
+                                <th>Position</th>
+                                <th>Contact Number</th>
+                                <th>Orders Received</th>
+                                <th>Date Added</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="staffTableBody"></tbody>
+
+                    </table>
+
+                </div>
+
+                <div class="staff-table-footer">
+                    <p id="resultsCount">Showing 0 staff members</p>
+                </div>
+
+            </div>
+
+            <footer class="dashboard-footer">
+                <p>
+                    © <span id="currentYear"></span>
+                    Printify Calapan. All rights reserved.
+                </p>
+            </footer>
+
+        </section>
+    </main>
+
+    <!-- ADD / EDIT STAFF MODAL -->
+    <div class="modal-overlay" id="staffFormModal" aria-hidden="true">
+
+        <div class="staff-modal staff-form-modal">
+
+            <div class="modal-header">
+                <div class="modal-heading-content">
+                    <span class="modal-eyebrow">
+                        <i class="fa-solid fa-user-plus"></i>
+                        STAFF DIRECTORY
+                    </span>
+
+                    <h2 id="staffFormTitle">Add New Staff</h2>
+
+                    <p id="staffFormSubtitle">
+                        Enter the staff member's information below.
+                    </p>
+                </div>
+
+                <button class="modal-close-button"
+                        type="button"
+                        id="closeStaffFormModal"
+                        aria-label="Close modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="staffForm">
+
+                <input type="hidden" id="editingStaffId">
+
+                <div class="staff-form-section">
+                    <div class="form-section-heading">
+                        <span class="form-section-icon">
+                            <i class="fa-solid fa-id-card"></i>
+                        </span>
+
+                        <div>
+                            <h3>Personal Information</h3>
+                            <p>Provide the basic details of the staff member.</p>
+                        </div>
+                    </div>
+
+                    <div class="staff-form-grid">
+
+                        <div class="form-group">
+                            <label for="staffName">
+                                Full Name <span>*</span>
+                            </label>
+
+                            <div class="input-with-icon">
+                                <i class="fa-regular fa-user"></i>
+                                <input type="text"
+                                       id="staffName"
+                                       placeholder="Enter full name"
+                                       autocomplete="name"
+                                       required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="staffEmail">
+                                Email Address <span>*</span>
+                            </label>
+
+                            <div class="input-with-icon">
+                                <i class="fa-regular fa-envelope"></i>
+                                <input type="email"
+                                       id="staffEmail"
+                                       placeholder="example@email.com"
+                                       autocomplete="email"
+                                       required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="staffPhone">
+                                Contact Number <span>*</span>
+                            </label>
+
+                            <div class="input-with-icon">
+                                <i class="fa-solid fa-phone"></i>
+                                <input type="tel"
+                                       id="staffPhone"
+                                       placeholder="09XXXXXXXXX"
+                                       autocomplete="tel"
+                                       required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="staffUsername">
+                                Login Username <span>*</span>
+                            </label>
+
+                            <div class="input-with-icon">
+                                <i class="fa-solid fa-at"></i>
+                                <input type="text"
+                                       id="staffUsername"
+                                       placeholder="4-20 letters, numbers, _"
+                                       autocomplete="off"
+                                       maxlength="20">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="staffPassword">
+                                <span id="staffPasswordLabel">Login Password</span> <span id="staffPasswordRequired">*</span>
+                            </label>
+
+                            <div class="input-with-icon">
+                                <i class="fa-solid fa-lock"></i>
+                                <input type="password"
+                                       id="staffPassword"
+                                       placeholder="8+ chars, upper, lower, number, symbol"
+                                       autocomplete="new-password"
+                                       maxlength="128">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="staffPosition">
+                                Position <span>*</span>
+                            </label>
+
+                            <div class="input-with-icon select-with-icon">
+                                <i class="fa-solid fa-briefcase"></i>
+                                <select id="staffPosition" required>
+                                    <option value="">Select position</option>
+                                    <option value="Manager">Manager</option>
+                                    <option value="Cashier">Cashier</option>
+                                    <option value="Print Operator">Print Operator</option>
+                                    <option value="Graphic Designer">Graphic Designer</option>
+                                    <option value="Production Staff">Production Staff</option>
+                                    <option value="Customer Service">Customer Service</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="staffAddress">Address</label>
+
+                            <div class="input-with-icon textarea-with-icon">
+                                <i class="fa-solid fa-location-dot"></i>
+                                <textarea id="staffAddress"
+                                          rows="3"
+                                          placeholder="Enter staff address"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="staffStatus">Account Status</label>
+
+                            <div class="input-with-icon select-with-icon">
+                                <i class="fa-solid fa-toggle-on"></i>
+                                <select id="staffStatus">
+                                    <option value="Active">Active</option>
+                                    <option value="On Leave">On Leave</option>
+                                    <option value="Inactive">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="secondary-button"
+                            type="button"
+                            id="cancelStaffForm">
+                        Cancel
+                    </button>
+
+                    <button class="primary-button"
+                            type="submit"
+                            id="saveStaffButton">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        Save Staff
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- VIEW STAFF MODAL -->
+    <div class="modal-overlay" id="viewStaffModal" aria-hidden="true">
+
+        <div class="staff-modal view-staff-modal">
+
+            <div class="modal-header">
+                <div>
+                    <span class="modal-eyebrow">
+                        <i class="fa-solid fa-user"></i>
+                        STAFF PROFILE
+                    </span>
+
+                    <h2>Staff Information</h2>
+                    <p>View the complete staff member details.</p>
+                </div>
+
+                <button class="modal-close-button"
+                        type="button"
+                        id="closeViewStaffModal"
+                        aria-label="Close modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="staffDetailsContent" class="staff-details-content"></div>
+
+            <div class="modal-actions">
+                <button class="print-qr-button"
+                        type="button"
+                        id="printStaffQrButton">
+                    <i class="fa-solid fa-print"></i>
+                    Print Staff QR
+                </button>
+
+                <button class="secondary-button"
+                        type="button"
+                        id="closeViewStaffButton">
+                    Close
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- DELETE CONFIRMATION MODAL -->
+    <div class="modal-overlay" id="deleteStaffModal" aria-hidden="true">
+
+        <div class="staff-modal delete-staff-modal">
+
+            <div class="delete-icon">
+                <i class="fa-solid fa-trash-can"></i>
+            </div>
+
+            <h2>Delete Staff Member?</h2>
+
+            <p>
+                Are you sure you want to delete
+                <strong id="deleteStaffName">this staff member</strong>?
+                This action cannot be undone.
+            </p>
+
+            <div class="modal-actions">
+                <button class="secondary-button"
+                        type="button"
+                        id="cancelDeleteStaff">
+                    Cancel
+                </button>
+
+                <button class="danger-button"
+                        type="button"
+                        id="confirmDeleteStaff">
+                    <i class="fa-solid fa-trash"></i>
+                    Delete Staff
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast-message" id="toastMessage">
+        <i class="fa-solid fa-circle-check" id="toastIcon"></i>
+        <span id="toastText">Notification message</span>
+    </div>
+
+</body>
+</html>

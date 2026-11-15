@@ -1,0 +1,1388 @@
+
+/* =========================================================
+   PRINTIFY CALAPAN
+   STAFF MANAGEMENT
+   CLEAN LIQUID GLASS DESIGN
+   LIGHT MODE / DARK MODE
+========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+/* =========================================================
+   1. VARIABLES
+========================================================= */
+
+.staff-management-content {
+    --staff-green: #19e51b;
+    --staff-green-dark: #12bd17;
+    --staff-green-soft: rgba(25, 229, 27, 0.10);
+
+    /* LIGHT MODE */
+    --staff-background: #f5f7f5;
+    --staff-surface: #ffffff;
+    --staff-surface-solid: #ffffff;
+    --staff-surface-hover: #f7faf7;
+    --staff-input-bg: #f8faf8;
+
+    --staff-text: #18221a;
+    --staff-muted: #68756b;
+    --staff-placeholder: #929d94;
+    --staff-border: #e4eae4;
+
+    --staff-shadow: 0 8px 28px rgba(20, 40, 24, 0.055);
+
+    width: 100%;
+    min-width: 0;
+    color: var(--staff-text);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+}
+
+/* Force consistent font inside this page */
+.staff-management-content *,
+.staff-modal *,
+.toast-message * {
+    font-family: 'Inter', sans-serif;
+    box-sizing: border-box;
+}
+
+.staff-management-content h1,
+.staff-management-content h2,
+.staff-management-content h3,
+.staff-modal h1,
+.staff-modal h2,
+.staff-modal h3 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* DARK MODE */
+
+body.dark-mode .staff-management-content {
+    --staff-background: #0b100c;
+    --staff-surface: #171e18;
+    --staff-surface-solid: #171e18;
+    --staff-surface-hover: #202a21;
+    --staff-input-bg: #101711;
+
+    --staff-text: #edf5ee;
+    --staff-muted: #a0ada2;
+    --staff-placeholder: #78867a;
+    --staff-border: rgba(255, 255, 255, 0.10);
+
+    --staff-shadow: 0 8px 28px rgba(0, 0, 0, 0.20);
+}
+
+/* =========================================================
+   2. INTRODUCTION
+========================================================= */
+
+.staff-management-content .content-introduction {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.staff-management-content .content-introduction h2 {
+    color: var(--staff-text);
+    font-size: 21px;
+    font-weight: 800;
+    margin: 0 0 7px;
+    letter-spacing: -0.5px;
+}
+
+.staff-management-content .content-introduction p {
+    color: var(--staff-muted);
+    font-size: 13px;
+    line-height: 1.65;
+    margin: 0;
+}
+
+.staff-management-content .dashboard-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 15px;
+    border: 1px solid var(--staff-border);
+    border-radius: 30px;
+    background: var(--staff-surface);
+    color: var(--staff-text);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.staff-management-content .status-indicator {
+    width: 8px;
+    height: 8px;
+    background: var(--staff-green);
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(25, 229, 27, 0.4);
+}
+
+/* =========================================================
+   3. DIRECTORY PANEL
+========================================================= */
+
+.staff-directory-panel {
+    padding: 25px;
+    border: 1px solid var(--staff-border);
+    border-radius: 18px;
+    background: var(--staff-surface);
+    box-shadow: var(--staff-shadow);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+.staff-directory-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 23px;
+}
+
+.staff-directory-heading h2 {
+    color: var(--staff-text);
+    font-size: 17px;
+    font-weight: 800;
+    margin: 0 0 6px;
+    letter-spacing: -0.3px;
+}
+
+.staff-directory-heading p {
+    color: var(--staff-muted);
+    font-size: 12px;
+    margin: 0;
+}
+
+/* =========================================================
+   4. BUTTONS
+========================================================= */
+
+.staff-management-content .primary-button,
+.staff-management-content .secondary-button,
+.staff-management-content .danger-button {
+    min-height: 41px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    padding: 0 17px;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.staff-management-content .primary-button {
+    color: #071008;
+    background: var(--staff-green);
+    border: 1px solid var(--staff-green);
+    box-shadow: 0 4px 13px rgba(25, 229, 27, 0.15);
+}
+
+.staff-management-content .primary-button:hover {
+    background: #12d814;
+    border-color: #12d814;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 17px rgba(25, 229, 27, 0.20);
+}
+
+.staff-management-content .secondary-button {
+    color: var(--staff-text);
+    background: var(--staff-surface-solid);
+    border: 1px solid var(--staff-border);
+}
+
+.staff-management-content .secondary-button:hover {
+    background: var(--staff-surface-hover);
+    border-color: rgba(25, 229, 27, 0.5);
+}
+
+.staff-management-content .danger-button {
+    color: #ffffff;
+    background: #e34444;
+    border: 1px solid #e34444;
+}
+
+.staff-management-content .danger-button:hover {
+    background: #ca3030;
+    transform: translateY(-1px);
+}
+
+/* =========================================================
+   5. TOOLBAR
+========================================================= */
+
+.staff-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 19px;
+}
+
+.staff-search {
+    position: relative;
+    flex: 1;
+    max-width: 360px;
+}
+
+.staff-search > i {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    transform: translateY(-50%);
+    color: var(--staff-muted);
+    font-size: 13px;
+}
+
+.staff-search input {
+    width: 100%;
+    height: 42px;
+    padding: 0 14px 0 39px;
+    border: 1px solid var(--staff-border);
+    border-radius: 9px;
+    outline: none;
+    background: var(--staff-input-bg);
+    color: var(--staff-text);
+    font-size: 12px;
+    transition: 0.2s ease;
+}
+
+.staff-search input:focus {
+    border-color: var(--staff-green-dark);
+    box-shadow: 0 0 0 3px rgba(25, 229, 27, 0.09);
+}
+
+.staff-search input::placeholder {
+    color: var(--staff-placeholder);
+    opacity: 1;
+}
+
+.staff-filters {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.staff-filters select {
+    height: 42px;
+    min-width: 135px;
+    padding: 0 32px 0 12px;
+    border: 1px solid var(--staff-border);
+    border-radius: 9px;
+    outline: none;
+    background: var(--staff-input-bg);
+    color: var(--staff-text);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.staff-filters select:focus {
+    border-color: var(--staff-green-dark);
+}
+
+.staff-filters option {
+    background: var(--staff-surface-solid);
+    color: var(--staff-text);
+}
+
+/* =========================================================
+   6. STAFF TABLE
+========================================================= */
+
+.staff-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--staff-border);
+    border-radius: 12px;
+}
+
+.staff-management-table {
+    width: 100%;
+    min-width: 850px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.staff-management-table thead {
+    background: var(--staff-input-bg);
+}
+
+.staff-management-table th {
+    padding: 15px 16px;
+    color: var(--staff-muted);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.55px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--staff-border);
+}
+
+.staff-management-table td {
+    padding: 14px 16px;
+    color: var(--staff-text);
+    font-size: 12px;
+    border-bottom: 1px solid var(--staff-border);
+    white-space: nowrap;
+}
+
+.staff-management-table tbody tr {
+    transition: background 0.2s ease;
+}
+
+.staff-management-table tbody tr:hover {
+    background: var(--staff-surface-hover);
+}
+
+.staff-management-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.staff-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 190px;
+}
+
+.staff-avatar {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    color: #087b12;
+    background: var(--staff-green-soft);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.staff-name-information {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.staff-name-information strong {
+    color: var(--staff-text);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.staff-name-information span {
+    color: var(--staff-muted);
+    font-size: 10px;
+}
+
+.staff-id {
+    color: var(--staff-muted);
+    font-weight: 600;
+}
+
+.staff-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 30px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.staff-status::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.staff-status.active {
+    color: #138b35;
+    background: rgba(25, 229, 27, 0.12);
+}
+
+.staff-status.active::before {
+    background: #19c94a;
+}
+
+.staff-status.inactive {
+    color: #a56b27;
+    background: rgba(230, 166, 66, 0.13);
+}
+
+.staff-status.inactive::before {
+    background: #d99b36;
+}
+
+/* TABLE ACTIONS */
+
+.staff-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.action-button {
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--staff-border);
+    border-radius: 8px;
+    background: var(--staff-surface-solid);
+    color: var(--staff-muted);
+    font-size: 11px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.action-button:hover {
+    color: #119b19;
+    border-color: var(--staff-green-dark);
+    background: var(--staff-green-soft);
+}
+
+.action-button.delete:hover {
+    color: #e34444;
+    border-color: #e34444;
+    background: rgba(227, 68, 68, 0.08);
+}
+
+/* EMPTY TABLE */
+
+.empty-state {
+    padding: 45px 20px !important;
+    text-align: center;
+    color: var(--staff-muted) !important;
+}
+
+.empty-state i {
+    display: block;
+    margin-bottom: 12px;
+    color: var(--staff-green-dark);
+    font-size: 27px;
+}
+
+.empty-state strong {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--staff-text);
+    font-size: 13px;
+}
+
+.empty-state span {
+    font-size: 11px;
+}
+
+/* TABLE FOOTER */
+
+.staff-table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+}
+
+.staff-table-footer p {
+    margin: 0;
+    color: var(--staff-muted);
+    font-size: 11px;
+}
+
+/* =========================================================
+   7. MODAL OVERLAY
+========================================================= */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+
+    background: rgba(8, 15, 9, 0.55);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transition: opacity 0.22s ease, visibility 0.22s ease;
+}
+
+.modal-overlay.active,
+.modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.staff-modal {
+    position: relative;
+    width: min(680px, 100%);
+    max-height: min(90vh, 850px);
+    overflow-y: auto;
+
+    padding: 25px;
+    border: 1px solid var(--staff-border);
+    border-radius: 18px;
+
+    background: var(--staff-surface-solid);
+    color: var(--staff-text);
+
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.20);
+
+    transform: translateY(15px) scale(0.985);
+    transition: transform 0.22s ease;
+}
+
+.modal-overlay.active .staff-modal,
+.modal-overlay.show .staff-modal {
+    transform: translateY(0) scale(1);
+}
+
+.staff-modal::-webkit-scrollbar {
+    width: 6px;
+}
+
+.staff-modal::-webkit-scrollbar-thumb {
+    background: rgba(120, 140, 120, 0.35);
+    border-radius: 20px;
+}
+
+/* =========================================================
+   8. MODAL HEADER
+========================================================= */
+
+.staff-modal .modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+
+    padding-bottom: 20px;
+    margin-bottom: 21px;
+    border-bottom: 1px solid var(--staff-border);
+}
+
+.modal-heading-content {
+    min-width: 0;
+}
+
+.modal-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 9px;
+    color: #119b19;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+.staff-modal .modal-header h2 {
+    margin: 0 0 6px;
+    color: var(--staff-text);
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+}
+
+.staff-modal .modal-header p {
+    margin: 0;
+    color: var(--staff-muted);
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.modal-close-button {
+    width: 35px;
+    height: 35px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid var(--staff-border);
+    border-radius: 9px;
+    background: var(--staff-input-bg);
+    color: var(--staff-muted);
+
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.modal-close-button:hover {
+    color: #e34444;
+    border-color: rgba(227, 68, 68, 0.4);
+    background: rgba(227, 68, 68, 0.08);
+}
+
+/* =========================================================
+   9. FORM SECTION
+========================================================= */
+
+.staff-form-section {
+    padding: 18px;
+    border: 1px solid var(--staff-border);
+    border-radius: 13px;
+    background: var(--staff-input-bg);
+}
+
+.form-section-heading {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 19px;
+}
+
+.form-section-icon {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background: var(--staff-green-soft);
+    color: #119b19;
+    font-size: 14px;
+}
+
+.form-section-heading h3 {
+    margin: 0 0 4px;
+    color: var(--staff-text);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.form-section-heading p {
+    margin: 0;
+    color: var(--staff-muted);
+    font-size: 10px;
+}
+
+.staff-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 17px 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    color: var(--staff-text);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.form-group label span {
+    color: #e34444;
+}
+
+/* =========================================================
+   10. INPUT FIELDS
+========================================================= */
+
+.input-with-icon {
+    position: relative;
+    width: 100%;
+}
+
+.input-with-icon > i {
+    position: absolute;
+    top: 50%;
+    left: 13px;
+    z-index: 1;
+    transform: translateY(-50%);
+    color: var(--staff-muted);
+    font-size: 12px;
+    pointer-events: none;
+}
+
+.input-with-icon input,
+.input-with-icon select,
+.input-with-icon textarea {
+    display: block;
+    width: 100%;
+    min-width: 0;
+
+    border: 1px solid var(--staff-border);
+    border-radius: 9px;
+    outline: none;
+
+    background: var(--staff-surface-solid);
+    color: var(--staff-text);
+
+    font-size: 12px;
+    font-weight: 500;
+
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-with-icon input,
+.input-with-icon select {
+    height: 42px;
+    padding: 0 12px 0 36px;
+}
+
+.input-with-icon select {
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 30px;
+}
+
+.select-with-icon::after {
+    content: "\f107";
+    position: absolute;
+    top: 50%;
+    right: 13px;
+    transform: translateY(-50%);
+    color: var(--staff-muted);
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    font-size: 11px;
+    pointer-events: none;
+}
+
+.input-with-icon textarea {
+    min-height: 82px;
+    resize: vertical;
+    padding: 12px 12px 12px 36px;
+    line-height: 1.6;
+}
+
+.textarea-with-icon > i {
+    top: 15px;
+    transform: none;
+}
+
+.input-with-icon input::placeholder,
+.input-with-icon textarea::placeholder {
+    color: var(--staff-placeholder);
+    opacity: 1;
+}
+
+.input-with-icon input:focus,
+.input-with-icon select:focus,
+.input-with-icon textarea:focus {
+    border-color: var(--staff-green-dark);
+    box-shadow: 0 0 0 3px rgba(25, 229, 27, 0.10);
+}
+
+.input-with-icon select option {
+    background: var(--staff-surface-solid);
+    color: var(--staff-text);
+}
+
+/* =========================================================
+   11. MODAL ACTIONS
+========================================================= */
+
+.staff-modal .modal-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+
+    margin-top: 22px;
+    padding-top: 17px;
+    border-top: 1px solid var(--staff-border);
+}
+
+.staff-modal .modal-actions button {
+    min-width: 105px;
+    min-height: 41px;
+}
+
+.staff-modal .modal-actions .print-qr-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 9px;
+    background: #19e51b;
+    color: #102016;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* =========================================================
+   12. VIEW STAFF DETAILS
+========================================================= */
+
+.view-staff-modal {
+    max-width: 590px;
+}
+
+.staff-details-content {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.staff-modal .staff-attendance-qr-panel {
+    display: grid;
+    justify-items: center;
+    gap: 12px;
+    padding: 20px;
+    border: 1px solid var(--staff-border);
+    border-radius: 12px;
+    background: var(--staff-input-bg);
+    text-align: center;
+}
+
+.staff-modal .staff-attendance-qr-panel h3 {
+    margin: 0 0 6px;
+    color: var(--staff-text);
+}
+
+.staff-modal .staff-attendance-qr-panel p {
+    margin: 0;
+    color: var(--staff-muted);
+}
+
+.staff-modal .staff-attendance-qr-code {
+    display: grid;
+    width: 240px;
+    height: 240px;
+    place-items: center;
+    padding: 10px;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #333333;
+}
+
+.staff-modal .staff-attendance-qr-code img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+.staff-modal .staff-attendance-qr-label {
+    color: var(--staff-text);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+}
+
+.staff-details-profile {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 17px;
+    border: 1px solid var(--staff-border);
+    border-radius: 12px;
+    background: var(--staff-input-bg);
+}
+
+.staff-details-avatar {
+    width: 54px;
+    height: 54px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 13px;
+    background: var(--staff-green-soft);
+    color: #119b19;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.staff-details-profile h3 {
+    margin: 0 0 5px;
+    color: var(--staff-text);
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.staff-details-profile p {
+    margin: 0 0 7px;
+    color: var(--staff-muted);
+    font-size: 11px;
+}
+
+.staff-details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 11px;
+}
+
+.staff-detail-item {
+    min-width: 0;
+    padding: 13px;
+    border: 1px solid var(--staff-border);
+    border-radius: 10px;
+    background: var(--staff-surface-solid);
+}
+
+.staff-detail-item span {
+    display: block;
+    margin-bottom: 7px;
+    color: var(--staff-muted);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.staff-detail-item strong {
+    display: block;
+    overflow-wrap: anywhere;
+    color: var(--staff-text);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.6;
+}
+
+/* =========================================================
+   13. DELETE MODAL
+========================================================= */
+
+.delete-staff-modal {
+    max-width: 410px;
+    padding: 30px;
+    text-align: center;
+}
+
+.delete-icon {
+    width: 58px;
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 17px;
+    border-radius: 15px;
+    color: #e34444;
+    background: rgba(227, 68, 68, 0.10);
+    font-size: 21px;
+}
+
+.delete-staff-modal h2 {
+    margin: 0 0 10px;
+    color: var(--staff-text);
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.delete-staff-modal > p {
+    margin: 0;
+    color: var(--staff-muted);
+    font-size: 11px;
+    line-height: 1.8;
+}
+
+.delete-staff-modal > p strong {
+    color: var(--staff-text);
+}
+
+.delete-staff-modal .modal-actions {
+    justify-content: center;
+    margin-top: 24px;
+}
+
+/* =========================================================
+   14. TOAST NOTIFICATION
+========================================================= */
+
+.toast-message {
+    position: fixed;
+    right: 25px;
+    bottom: 25px;
+    z-index: 10001;
+
+    display: flex;
+    align-items: center;
+    gap: 11px;
+
+    min-width: 250px;
+    max-width: calc(100% - 35px);
+    padding: 14px 17px;
+
+    border: 1px solid var(--staff-border);
+    border-radius: 11px;
+
+    background: var(--staff-surface-solid);
+    color: var(--staff-text);
+
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.12);
+
+    font-size: 11px;
+    font-weight: 600;
+
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(12px);
+    transition: 0.25s ease;
+}
+
+.toast-message.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.toast-message i {
+    color: var(--staff-green-dark);
+    font-size: 16px;
+}
+
+/* =========================================================
+   15. FOOTER
+========================================================= */
+
+.staff-management-content .dashboard-footer {
+    margin-top: 25px;
+    padding: 15px 0;
+    text-align: center;
+}
+
+.staff-management-content .dashboard-footer p {
+    color: var(--staff-muted);
+    font-size: 10px;
+}
+
+/* =========================================================
+   16. DARK MODE REFINEMENTS
+========================================================= */
+
+body.dark-mode .staff-modal {
+    background: #171e18;
+    border-color: rgba(255, 255, 255, 0.10);
+    color: #edf5ee;
+}
+
+body.dark-mode .staff-form-section {
+    background: #101711;
+}
+
+body.dark-mode .input-with-icon input,
+body.dark-mode .input-with-icon select,
+body.dark-mode .input-with-icon textarea {
+    background: #101711;
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #edf5ee;
+}
+
+body.dark-mode .input-with-icon input::placeholder,
+body.dark-mode .input-with-icon textarea::placeholder {
+    color: #78867a;
+}
+
+body.dark-mode .input-with-icon select option {
+    background: #171e18;
+    color: #edf5ee;
+}
+
+body.dark-mode .staff-detail-item {
+    background: #171e18;
+}
+
+body.dark-mode .staff-details-profile {
+    background: #101711;
+}
+
+body.dark-mode .modal-close-button {
+    background: #202a21;
+}
+
+/* =========================================================
+   17. RESPONSIVE DESIGN
+========================================================= */
+
+@media (max-width: 1100px) {
+    .staff-directory-panel {
+        padding: 20px;
+    }
+
+    .staff-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .staff-search {
+        max-width: 100%;
+    }
+
+    .staff-filters {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 850px) {
+    .staff-management-content .content-introduction {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .staff-directory-heading {
+        align-items: flex-start;
+    }
+
+    .staff-filters select {
+        flex: 1;
+    }
+}
+
+@media (max-width: 600px) {
+    .staff-directory-panel {
+        padding: 15px;
+        border-radius: 14px;
+    }
+
+    .staff-directory-heading {
+        flex-direction: column;
+    }
+
+    .staff-directory-heading .primary-button {
+        width: 100%;
+    }
+
+    .staff-filters {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .staff-filters select {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .staff-filters .secondary-button {
+        grid-column: 1 / -1;
+    }
+
+    .modal-overlay {
+        align-items: center;
+        padding: 12px;
+    }
+
+    .staff-modal {
+        max-height: calc(100vh - 24px);
+        padding: 19px;
+        border-radius: 15px;
+    }
+
+    .staff-form-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .form-group.full-width {
+        grid-column: auto;
+    }
+
+    .staff-form-section {
+        padding: 14px;
+    }
+
+    .staff-modal .modal-header h2 {
+        font-size: 18px;
+    }
+
+    .staff-details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .staff-modal .modal-actions {
+        flex-direction: column-reverse;
+    }
+
+    .staff-modal .modal-actions button {
+        width: 100%;
+    }
+
+    .toast-message {
+        right: 15px;
+        bottom: 15px;
+    }
+}
+
+@media (max-width: 380px) {
+    .staff-management-content .content-introduction h2 {
+        font-size: 18px;
+    }
+
+    .staff-filters {
+        grid-template-columns: 1fr;
+    }
+
+    .staff-filters .secondary-button {
+        grid-column: auto;
+    }
+
+    .staff-modal {
+        padding: 16px;
+    }
+
+    .form-section-heading p {
+        font-size: 9px;
+    }
+}
+
+/* =========================================
+   ADMIN PROFILE DROPDOWN - OVERLAY FIX
+========================================= */
+
+/* Profile button container */
+.topbar-profile,
+.profile-container,
+.profile-menu-container {
+    position: relative;
+    z-index: 10000;
+}
+
+/* Floating dropdown */
+#profileDropdown,
+.profile-dropdown {
+    position: absolute !important;
+    top: calc(100% + 12px) !important;
+    right: 0 !important;
+    left: auto !important;
+
+    width: 275px;
+    min-width: 275px;
+
+    display: none;
+    flex-direction: column;
+
+    padding: 15px;
+    margin: 0;
+
+    background: rgba(7, 22, 12, 0.97) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 18px;
+
+    backdrop-filter: blur(25px) saturate(150%);
+    -webkit-backdrop-filter: blur(25px) saturate(150%);
+
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.40);
+
+    z-index: 10001 !important;
+    overflow: visible;
+}
+
+/* Show dropdown */
+#profileDropdown.show,
+.profile-dropdown.show {
+    display: flex !important;
+}
+
+/* Account information */
+#profileDropdown .profile-dropdown-header,
+.profile-dropdown .profile-dropdown-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 8px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.13);
+}
+
+/* Dropdown menu items */
+#profileDropdown a,
+#profileDropdown button,
+.profile-dropdown a,
+.profile-dropdown button {
+    position: relative;
+    width: 100%;
+    min-height: 43px;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 10px 12px;
+    margin-top: 5px;
+
+    color: #e9f0eb;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 10px;
+
+    font-family: inherit;
+    font-size: 12px;
+    text-align: left;
+    text-decoration: none;
+
+    cursor: pointer;
+    transition: all .2s ease;
+}
+
+#profileDropdown a:hover,
+#profileDropdown button:hover,
+.profile-dropdown a:hover,
+.profile-dropdown button:hover {
+    color: #19e51b;
+    background: rgba(25, 229, 27, 0.10);
+    border-color: rgba(25, 229, 27, 0.15);
+}
+
+/* Settings icon */
+#profileDropdown .settings-link i,
+.profile-dropdown .settings-link i {
+    color: #aab8ad;
+}
+
+/* Logout */
+#profileDropdown .logout-button,
+.profile-dropdown .logout-button {
+    color: #ff7777;
+}
+
+#profileDropdown .logout-button:hover,
+.profile-dropdown .logout-button:hover {
+    color: #ff7777;
+    background: rgba(255, 75, 75, 0.10);
+    border-color: rgba(255, 75, 75, 0.16);
+}
+
+/* Prevent dashboard content from covering dropdown */
+.topbar,
+.topbar-container,
+.dashboard-topbar {
+    position: relative;
+    z-index: 999;
+    overflow: visible !important;
+}
+
+/* Avoid clipping the floating dropdown */
+.dashboard-container,
+.main-content,
+.content-wrapper {
+    overflow: visible;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    #profileDropdown,
+    .profile-dropdown {
+        width: 250px;
+        min-width: 250px;
+        right: -5px !important;
+    }
+}

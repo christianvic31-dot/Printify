@@ -1,0 +1,25 @@
+databases:
+  - name: printify-db
+    databaseName: printify
+    user: printify
+    plan: basic-256mb
+    region: singapore
+    ipAllowList: []
+
+services:
+  - type: web
+    name: printify
+    runtime: docker
+    region: singapore
+    plan: 0.5c-512mb
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://0.0.0.0:10000
+      - key: ConnectionStrings__Default
+        fromDatabase:
+          name: printify-db
+          property: connectionString

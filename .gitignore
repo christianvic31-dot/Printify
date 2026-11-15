@@ -1,0 +1,8 @@
+.vs/
+**/bin/
+**/obj/
+Backend/appsettings.Development.json
+*.user
+*.suo
+*.pfx
+*.cer

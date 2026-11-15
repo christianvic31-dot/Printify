@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="js/auth-guard.js" data-role="Staff"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Attendance | Printify</title>
+    <link rel="icon" type="image/png" href="image/printify_logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="css/staff-dashboard.css">
+    <link rel="stylesheet" href="css/staff-pages.css">
+    <script src="js/staff-common.js" defer></script>
+    <script src="js/staff-attendance.js" defer></script>
+</head>
+<body class="sidebar-hidden">
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="staff-dashboard.html" class="logo"><span>Printify</span></a>
+        </div>
+        <div class="sidebar-label">WORKSPACE</div>
+        <nav class="sidebar-navigation">
+            <a href="staff-dashboard.html" class="nav-link">Dashboard</a>
+            <a href="staff-orders.html" class="nav-link">My Orders</a>
+            <a href="staff-attendance.html" class="nav-link active">Attendance</a>
+            <a href="staff-notifications.html" class="nav-link">Notifications</a>
+        </nav>
+        <div class="sidebar-label settings-label">PERSONAL</div>
+        <nav class="sidebar-navigation">
+            <a href="staff-profile.html" class="nav-link">My Profile</a>
+            <a href="staff-settings.html" class="nav-link">Settings</a>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="sidebar-account">
+                <div class="account-avatar" data-staff-initials>S</div>
+                <div class="account-details">
+                    <strong data-staff-name>Staff Member</strong>
+                    <span>Staff Account</span>
+                </div>
+            </div>
+            <button class="sidebar-logout" id="sidebarLogoutButton" type="button">Log Out</button>
+            <div class="sidebar-footer">
+                <span>PRINTIFY CALAPAN</span>
+                <span>© <span data-current-year></span></span>
+            </div>
+        </div>
+    </aside>
+    <main class="main-content">
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="icon-button menu-button" id="menuToggle" type="button" aria-label="Toggle sidebar">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="page-heading">
+                    <h1>My Attendance</h1>
+                    <p>Record your time in and time out.</p>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <span id="currentDate"></span>
+                <button class="icon-button" id="themeToggle" type="button" aria-label="Toggle theme">
+                    <i class="fa-solid fa-circle-half-stroke"></i>
+                </button>
+                <button class="icon-button" id="notificationButton" type="button" aria-label="Notifications">
+                    <i class="fa-regular fa-bell"></i>
+                </button>
+                <button class="icon-button" id="logoutButton" type="button" aria-label="Log out">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+        </header>
+        <section class="dashboard-content staff-page-content">
+            <div class="content-introduction">
+                <div>
+                    <h2>Today's Attendance</h2>
+                    <p id="attendanceSummary">Loading attendance...</p>
+                </div>
+            </div>
+            <section class="panel staff-page-panel">
+                <h2 id="attendanceStatus">Not clocked in</h2>
+                <p>
+                    Time in: <strong id="timeInValue">—</strong>
+                    &nbsp; Time out: <strong id="timeOutValue">—</strong>
+                </p>
+                <div class="staff-page-actions">
+                    <button class="staff-page-button" id="clockInButton" type="button">Clock In</button>
+                    <button class="staff-page-button secondary" id="clockOutButton" type="button">Clock Out</button>
+                    <button class="staff-page-button secondary" id="refreshAttendanceButton" type="button">Refresh</button>
+                </div>
+                <p class="staff-page-message" id="attendanceMessage" role="status" aria-live="polite"></p>
+            </section>
+            <section class="panel staff-page-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Attendance History</h2>
+                        <p>Your recorded attendance entries.</p>
+                    </div>
+                </div>
+                <div class="staff-page-table-wrap">
+                    <table class="staff-page-table">
+                        <thead>
+                            <tr><th>DATE</th><th>TIME IN</th><th>TIME OUT</th><th>STATUS</th></tr>
+                        </thead>
+                        <tbody id="attendanceRows">
+                            <tr><td class="staff-page-empty" colspan="4">Loading records...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </section>
+    </main>
+</body>
+</html>
