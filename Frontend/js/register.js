@@ -444,7 +444,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // 8. TERMS AND CONDITIONS
     // ==========================================
 
-    document.getElementById("termsLink").addEventListener("click", function (event) {
+    document.querySelector(".terms-label a")?.addEventListener("click", function (event) {
 
         event.preventDefault();
 
