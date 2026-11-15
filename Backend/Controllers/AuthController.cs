@@ -101,6 +101,13 @@ public class AuthController : ControllerBase
         address = user.Address
     };
 
+    [HttpGet("admin-registration-status")]
+    public async Task<IActionResult> AdminRegistrationStatus()
+    {
+        var available = !await _db.Users.AsNoTracking().AnyAsync(u => u.Role == "Admin");
+        return Ok(new { available });
+    }
+
     /* ---------- REGISTER (UNANG ADMIN LANG) ---------- */
 
     [HttpPost("register")]
@@ -115,8 +122,8 @@ public class AuthController : ControllerBase
             return StatusCode(403, new { message = "Initial Admin setup is disabled or the setup key is invalid." });
 
         // Sarado na ang pag-register kapag may Admin na. Ang Admin na ang gumagawa ng Staff accounts.
-        if (await _db.Users.AnyAsync())
-            return StatusCode(403, new { message = "Registration is closed. Staff accounts are created by the Admin." });
+        if (await _db.Users.AnyAsync(u => u.Role == "Admin"))
+            return StatusCode(403, new { message = "An Admin account already exists. Registration is closed." });
 
         var fullName = (request?.FullName ?? "").Trim();
         var username = (request?.Username ?? "").Trim();
