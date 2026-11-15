@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Mail;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -22,6 +23,12 @@ public class RegisterRequest
     public string Email { get; set; }
     public string Password { get; set; }
     public string SetupToken { get; set; }
+}
+
+public class VerifyEmailRequest
+{
+    public string Email { get; set; } = "";
+    public string Code { get; set; } = "";
 }
 
 public class LoginRequest
@@ -161,33 +168,101 @@ public class AuthController : ControllerBase
         if (await _db.Users.AnyAsync(u => u.Email == email))
             return Conflict(new { message = "That email is already registered.", errors = new { email = "That email is already registered." } });
 
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            FullName = fullName,
-            Username = username,
-            Email = email,
-            PasswordHash = PasswordHasher.Hash(password),
-            Role = "Admin",
-            CreatedAt = DateTime.UtcNow
-        };
+        if (string.IsNullOrWhiteSpace(_configuration["Smtp:Username"]) ||
+            string.IsNullOrWhiteSpace(_configuration["Smtp:AppPassword"]) ||
+            string.IsNullOrWhiteSpace(_configuration["Smtp:FromEmail"]))
+            return StatusCode(503, new { message = "Email verification is not configured yet. Set SMTP environment variables in Render." });
 
-        _db.Users.Add(user);
+        var now = DateTime.UtcNow;
+        var pending = await _db.PendingAdminRegistrations.FirstOrDefaultAsync(p => p.Email == email);
+        if (pending != null && pending.LastSentAt > now.AddMinutes(-1))
+            return StatusCode(429, new { message = "Please wait one minute before requesting another code." });
+
+        var code = RandomNumberGenerator.GetInt32(0, 1000000).ToString("D6");
+        if (pending == null)
+        {
+            pending = new PendingAdminRegistration { Id = Guid.NewGuid(), Email = email };
+            _db.PendingAdminRegistrations.Add(pending);
+        }
+        pending.FullName = fullName;
+        pending.Username = username;
+        pending.PasswordHash = PasswordHasher.Hash(password);
+        pending.CodeHash = HashToken(code);
+        pending.ExpiresAt = now.AddMinutes(10);
+        pending.LastSentAt = now;
+        pending.FailedAttempts = 0;
 
         try
         {
+            await SendVerificationEmail(email, code);
             await _db.SaveChangesAsync();
         }
-        catch (DbUpdateException)
+        catch (Exception ex)
         {
-            return Conflict(new { message = "That username or email is already registered." });
+            _logger.LogError(ex, "Unable to send registration verification email.");
+            return StatusCode(503, new { message = "Unable to send verification email. Check Gmail SMTP settings and try again." });
         }
 
-        return StatusCode(201, new
+        return Ok(new { message = "A 6-digit verification code was sent to your email. It expires in 10 minutes.", verificationRequired = true });
+    }
+
+    [HttpPost("verify-email")]
+    public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request)
+    {
+        var email = (request?.Email ?? "").Trim().ToLowerInvariant();
+        var code = (request?.Code ?? "").Trim();
+        if (!EmailPattern.IsMatch(email) || !Regex.IsMatch(code, @"^\d{6}$"))
+            return BadRequest(new { message = "Enter your email and 6-digit verification code." });
+
+        var pending = await _db.PendingAdminRegistrations.FirstOrDefaultAsync(p => p.Email == email);
+        if (pending == null || pending.ExpiresAt <= DateTime.UtcNow || pending.FailedAttempts >= 5)
+            return BadRequest(new { message = "Code expired or too many attempts. Register again to request a new code." });
+
+        var expected = Convert.FromHexString(pending.CodeHash);
+        var provided = Convert.FromHexString(HashToken(code));
+        if (!CryptographicOperations.FixedTimeEquals(expected, provided))
         {
-            message = "Admin account created. You can now log in.",
-            role = user.Role
-        });
+            pending.FailedAttempts++;
+            await _db.SaveChangesAsync();
+            return BadRequest(new { message = "Incorrect verification code." });
+        }
+
+        if (await _db.Users.AnyAsync(u => u.Role == "Admin" || u.Email == email || u.Username.ToLower() == pending.Username.ToLower()))
+            return Conflict(new { message = "Admin registration is closed or the username/email is already used." });
+
+        var user = new User
+        {
+            Id = Guid.NewGuid(), FullName = pending.FullName, Username = pending.Username,
+            Email = pending.Email, PasswordHash = pending.PasswordHash,
+            Role = "Admin", CreatedAt = DateTime.UtcNow
+        };
+        _db.Users.Add(user);
+        _db.PendingAdminRegistrations.Remove(pending);
+        try { await _db.SaveChangesAsync(); }
+        catch (DbUpdateException) { return Conflict(new { message = "An Admin account already exists or the username/email is taken." }); }
+        return Ok(new { message = "Email verified. Admin account created. You can now log in." });
+    }
+
+    private async Task SendVerificationEmail(string recipient, string code)
+    {
+        var username = _configuration["Smtp:Username"];
+        var password = _configuration["Smtp:AppPassword"];
+        var sender = _configuration["Smtp:FromEmail"];
+        var host = _configuration["Smtp:Host"] ?? "smtp.gmail.com";
+        var port = int.TryParse(_configuration["Smtp:Port"], out var parsed) ? parsed : 587;
+        using var message = new MailMessage(sender!, recipient)
+        {
+            Subject = "Printify - Verify your email",
+            Body = $"Your Printify verification code is: {code}\\nThis code expires in 10 minutes. Do not share it."
+        };
+        using var client = new SmtpClient(host, port)
+        {
+            EnableSsl = true,
+            Credentials = new NetworkCredential(username, password),
+            DeliveryMethod = SmtpDeliveryMethod.Network,
+            Timeout = 15000
+        };
+        await client.SendMailAsync(message);
     }
 
     private bool IsValidSetupToken(string providedToken)
