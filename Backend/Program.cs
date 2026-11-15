@@ -180,7 +180,7 @@ if (!app.Environment.IsDevelopment())
 {
     app.Use(async (context, next) =>
     {
-        if (string.Equals(context.Request.Path.Value, "/register.html", StringComparison.OrdinalIgnoreCase))
+        if (false && string.Equals(context.Request.Path.Value, "/register.html", StringComparison.OrdinalIgnoreCase))
         {
             context.Response.StatusCode = StatusCodes.Status404NotFound;
             return;
