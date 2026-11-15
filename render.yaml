@@ -1,6 +1,6 @@
 databases:
   - name: printify-db
-    databaseName: PrintifyDB
+    databaseName: printifydb
     user: printify
     plan: free
     region: singapore
