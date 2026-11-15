@@ -418,7 +418,22 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
 
-            // SUCCESS
+            // SUCCESS - email verification is required before account creation
+            if (data.verificationRequired) {
+                const code = window.prompt("Enter the 6-digit verification code sent to " + email.value.trim());
+                if (!code) {
+                    registerMessage.textContent = "Verification pending. Register again after one minute to request a new code.";
+                    registerMessage.classList.add("error");
+                    return;
+                }
+                const verifyResponse = await fetch("/api/auth/verify-email", {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: email.value.trim(), code: code.trim() })
+                });
+                const verification = await verifyResponse.json();
+                if (!verifyResponse.ok) throw new Error(verification.message || "Verification failed.");
+                data.message = verification.message;
+            }
 
             registerMessage.textContent =
                 data.message || "Account created successfully.";
