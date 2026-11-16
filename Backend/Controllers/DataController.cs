@@ -9,7 +9,7 @@ using Printify.Backend.Services;
 namespace Printify.Backend.Controllers;
 
 [ApiController]
-[Route("api/dashboard")]
+[Route("api/data")]
 [Authorize]
 public class DataController : ControllerBase
 {
