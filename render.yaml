@@ -1,6 +1,14 @@
+databases:
+  - name: PrintifyDB
+    databaseName: printifydb
+    user: printify
+    plan: free
+    region: singapore
+    ipAllowList: []
+
 services:
   - type: web
-    name: printify
+    name: printify-j47v
     runtime: docker
     region: singapore
     plan: free
@@ -16,5 +24,5 @@ services:
         value: smtp.gmail.com
       - key: Smtp__Port
         value: "587"
-      # Set Smtp__Username, Smtp__FromEmail, and Smtp__AppPassword
-      # privately in the Render dashboard. Never commit credentials.
+      # Existing database connection and SMTP credentials are managed
+      # privately in Render; do not store secrets in GitHub.
