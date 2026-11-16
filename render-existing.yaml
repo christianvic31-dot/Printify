@@ -1,0 +1,28 @@
+databases:
+  - name: PrintifyDB
+    databaseName: printifydb
+    user: printify
+    plan: free
+    region: singapore
+    ipAllowList: []
+
+services:
+  - type: web
+    name: printify-j47v
+    runtime: docker
+    region: singapore
+    plan: free
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    healthCheckPath: /
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://0.0.0.0:10000
+      - key: Smtp__Host
+        value: smtp.gmail.com
+      - key: Smtp__Port
+        value: "587"
+      # Existing database connection and SMTP credentials are managed
+      # privately in Render; do not store secrets in GitHub.
