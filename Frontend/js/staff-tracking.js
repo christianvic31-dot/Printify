@@ -1530,20 +1530,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const supportsNativeQr = typeof window.BarcodeDetector === "function";
         const supportsJsQr = typeof window.jsQR === "function";
 
-        if (!supportsNativeQr && !supportsJsQr) {
-
-            scannerMessage.textContent =
-                "QR scanner could not load. Check the internet connection or enter the Staff ID manually.";
-
-            showToast(
-                "QR scanner could not load. Enter the Staff ID manually.",
-                "error"
-            );
-
-            return;
-
-        }
-
         if (cameraStream || isCameraStarting) {
             return;
         }
@@ -1554,44 +1540,39 @@ document.addEventListener("DOMContentLoaded", function () {
 
         try {
 
-            barcodeDetector = null;
-            if (supportsNativeQr) {
-                try {
-                    const supportedFormats = typeof window.BarcodeDetector.getSupportedFormats === "function"
-                        ? await window.BarcodeDetector.getSupportedFormats()
-                        : ["qr_code"];
-                    if (supportedFormats.includes("qr_code")) {
-                        barcodeDetector = new window.BarcodeDetector({ formats: ["qr_code"] });
-                    }
-                } catch (detectorError) {
-                    console.warn("Native QR detection unavailable; using JavaScript fallback.", detectorError);
-                }
-            }
-
-            if (!barcodeDetector && !supportsJsQr) {
-                throw new Error("No supported QR decoder is available.");
-            }
-
-            if (!barcodeDetector) {
-                qrScanCanvas = document.createElement("canvas");
-                qrScanContext = qrScanCanvas.getContext("2d", { willReadFrequently: true });
-
-                if (!qrScanContext) {
-                    throw new Error("Unable to initialize the QR scanner.");
-                }
-            }
-
+            // Ask for camera permission immediately from the user's click.
+            // Do not wait for QR decoder initialization or CDN scripts.
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: "environment"
-                },
+                video: { facingMode: { ideal: "environment" } },
                 audio: false
             });
 
             if (requestId !== cameraRequestId) {
-                stream.getTracks().forEach(function (track) {
-                    track.stop();
-                });
+                stream.getTracks().forEach(track => track.stop());
+                return;
+            }
+
+            barcodeDetector = null;
+            if (supportsNativeQr) {
+                try {
+                    const formats = typeof window.BarcodeDetector.getSupportedFormats === "function"
+                        ? await window.BarcodeDetector.getSupportedFormats()
+                        : ["qr_code"];
+                    if (formats.includes("qr_code")) {
+                        barcodeDetector = new window.BarcodeDetector({ formats: ["qr_code"] });
+                    }
+                } catch (detectorError) {
+                    console.warn("Native QR decoder unavailable:", detectorError);
+                }
+            }
+
+            if (!barcodeDetector && supportsJsQr) {
+                qrScanCanvas = document.createElement("canvas");
+                qrScanContext = qrScanCanvas.getContext("2d", { willReadFrequently: true });
+            }
+
+            if (requestId !== cameraRequestId) {
+                stream.getTracks().forEach(track => track.stop());
                 return;
             }
 
@@ -1603,9 +1584,14 @@ document.addEventListener("DOMContentLoaded", function () {
             await scannerVideo.play();
 
             isScanning = true;
-            scannerMessage.textContent =
-                "Camera is active. Position the QR code inside the frame.";
-            scanForQRCode();
+            if (!barcodeDetector && !qrScanContext) {
+                scannerMessage.textContent =
+                    "Camera is active, but the QR decoder did not load. Check your internet connection or enter the Staff ID manually.";
+            } else {
+                scannerMessage.textContent =
+                    "Camera is active. Position the QR code inside the frame.";
+                scanForQRCode();
+            }
 
         } catch (error) {
 
