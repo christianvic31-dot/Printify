@@ -20,6 +20,8 @@ services:
         value: Production
       - key: ASPNETCORE_URLS
         value: http://0.0.0.0:10000
+      - key: PRINTIFY_BLUEPRINT_MANAGED
+        value: "true"
       - key: Smtp__Host
         value: smtp.gmail.com
       - key: Smtp__Port
