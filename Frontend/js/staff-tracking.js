@@ -1367,7 +1367,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         try {
             const scannedUrl = new URL(scannedValue);
-            const scannedStaffCode = scannedUrl.pathname.endsWith("/attendance-scan.html")
+            const scannedStaffCode = scannedUrl.origin === window.location.origin && scannedUrl.pathname.endsWith("/attendance-scan.html")
                 ? scannedUrl.searchParams.get("staffCode")
                 : "";
 
