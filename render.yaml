@@ -1,5 +1,5 @@
 databases:
-  - name: printify-db
+  - name: PrintifyDB
     databaseName: printifydb
     user: printify
     plan: free
@@ -8,7 +8,7 @@ databases:
 
 services:
   - type: web
-    name: printify
+    name: printify-j47v
     runtime: docker
     region: singapore
     plan: free
@@ -22,7 +22,7 @@ services:
         value: http://0.0.0.0:10000
       - key: ConnectionStrings__Default
         fromDatabase:
-          name: printify-db
+          name: PrintifyDB
           property: connectionString
       - key: Smtp__Host
         value: smtp.gmail.com
