@@ -1554,9 +1554,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
         try {
 
-            barcodeDetector = supportsNativeQr
-                ? new window.BarcodeDetector({ formats: ["qr_code"] })
-                : null;
+            barcodeDetector = null;
+            if (supportsNativeQr) {
+                try {
+                    const supportedFormats = typeof window.BarcodeDetector.getSupportedFormats === "function"
+                        ? await window.BarcodeDetector.getSupportedFormats()
+                        : ["qr_code"];
+                    if (supportedFormats.includes("qr_code")) {
+                        barcodeDetector = new window.BarcodeDetector({ formats: ["qr_code"] });
+                    }
+                } catch (detectorError) {
+                    console.warn("Native QR detection unavailable; using JavaScript fallback.", detectorError);
+                }
+            }
+
+            if (!barcodeDetector && !supportsJsQr) {
+                throw new Error("No supported QR decoder is available.");
+            }
 
             if (!barcodeDetector) {
                 qrScanCanvas = document.createElement("canvas");
