@@ -1,304 +1,223 @@
-
-/* =========================================================
-   PRINTIFY CALAPAN
-   STAFF MANAGEMENT
-   CLEAN LIQUID GLASS DESIGN
-   LIGHT MODE / DARK MODE
-========================================================= */
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
-
-/* =========================================================
-   1. VARIABLES
-========================================================= */
+/* PRINTIFY STAFF MANAGEMENT — ORDERS-BASED CSS
+   Based on user-provided orders.css. Replace the old staff-management.css entirely.
+   Keeps dashboard.css for sidebar/topbar. No JS or HTML changes. */
 
 .staff-management-content {
-    --staff-green: #19e51b;
-    --staff-green-dark: #12bd17;
-    --staff-green-soft: rgba(25, 229, 27, 0.10);
-
-    /* LIGHT MODE */
-    --staff-background: #f5f7f5;
-    --staff-surface: #ffffff;
-    --staff-surface-solid: #ffffff;
-    --staff-surface-hover: #f7faf7;
-    --staff-input-bg: #f8faf8;
-
-    --staff-text: #18221a;
-    --staff-muted: #68756b;
-    --staff-placeholder: #929d94;
-    --staff-border: #e4eae4;
-
-    --staff-shadow: 0 8px 28px rgba(20, 40, 24, 0.055);
-
-    width: 100%;
-    min-width: 0;
-    color: var(--staff-text);
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
+    --green: #19e51b;
+    --green-hover: #39f43b;
+    --panel: rgba(255,255,255,.075);
+    --border: rgba(255,255,255,.13);
+    --muted: #a5b0a7;
+    --text: #f6fff7;
+    --input: rgba(0,0,0,.16);
+    color: var(--text);
 }
 
-/* Force consistent font inside this page */
-.staff-management-content *,
-.staff-modal *,
-.toast-message * {
-    font-family: 'Inter', sans-serif;
-    box-sizing: border-box;
-}
+/* BREADCRUMB */
 
-.staff-management-content h1,
-.staff-management-content h2,
-.staff-management-content h3,
-.staff-modal h1,
-.staff-modal h2,
-.staff-modal h3 {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-}
-
-/* DARK MODE */
-
-body.dark-mode .staff-management-content {
-    --staff-background: #0b100c;
-    --staff-surface: #171e18;
-    --staff-surface-solid: #171e18;
-    --staff-surface-hover: #202a21;
-    --staff-input-bg: #101711;
-
-    --staff-text: #edf5ee;
-    --staff-muted: #a0ada2;
-    --staff-placeholder: #78867a;
-    --staff-border: rgba(255, 255, 255, 0.10);
-
-    --staff-shadow: 0 8px 28px rgba(0, 0, 0, 0.20);
-}
-
-/* =========================================================
-   2. INTRODUCTION
-========================================================= */
-
-.staff-management-content .content-introduction {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 18px;
-    margin-bottom: 25px;
-}
-
-.staff-management-content .content-introduction h2 {
-    color: var(--staff-text);
-    font-size: 21px;
-    font-weight: 800;
-    margin: 0 0 7px;
-    letter-spacing: -0.5px;
-}
-
-.staff-management-content .content-introduction p {
-    color: var(--staff-muted);
-    font-size: 13px;
-    line-height: 1.65;
-    margin: 0;
-}
-
-.staff-management-content .dashboard-status {
+.staff-management-content .breadcrumb {
     display: inline-flex;
     align-items: center;
-    gap: 9px;
-    padding: 10px 15px;
-    border: 1px solid var(--staff-border);
-    border-radius: 30px;
-    background: var(--staff-surface);
-    color: var(--staff-text);
+    gap: 12px;
+    padding: 14px 17px;
+    margin-bottom: 25px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgba(5, 20, 11, .95);
     font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
+    font-weight: 700;
 }
 
-.staff-management-content .status-indicator {
-    width: 8px;
-    height: 8px;
-    background: var(--staff-green);
-    border-radius: 50%;
-    box-shadow: 0 0 10px rgba(25, 229, 27, 0.4);
+.staff-management-content .breadcrumb a {
+    color: var(--green);
+    text-decoration: none;
 }
 
-/* =========================================================
-   3. DIRECTORY PANEL
-========================================================= */
+.staff-management-content .breadcrumb > i {
+    color: #a8b8ab;
+    font-size: 10px;
+}
 
-.staff-directory-panel {
-    padding: 25px;
-    border: 1px solid var(--staff-border);
+/* ORDERS-STYLE GLASS PANEL */
+
+.staff-management-content .staff-directory-panel {
+    padding: 23px;
+    border: 1px solid var(--border);
     border-radius: 18px;
-    background: var(--staff-surface);
-    box-shadow: var(--staff-shadow);
+    background: var(--panel);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
+    box-shadow: none;
 }
 
 .staff-directory-heading {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    gap: 15px;
-    margin-bottom: 23px;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 25px;
 }
 
 .staff-directory-heading h2 {
-    color: var(--staff-text);
+    margin: 0 0 8px;
+    color: #fff;
     font-size: 17px;
     font-weight: 800;
-    margin: 0 0 6px;
-    letter-spacing: -0.3px;
 }
 
 .staff-directory-heading p {
-    color: var(--staff-muted);
-    font-size: 12px;
     margin: 0;
+    color: var(--muted);
+    font-size: 12px;
 }
 
-/* =========================================================
-   4. BUTTONS
-========================================================= */
+.staff-header-actions,
+.staff-export-actions {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: wrap;
+}
+
+.staff-management-content .staff-count-badge {
+    padding: 11px 14px;
+    border: 1px solid rgba(25, 229, 27, .25);
+    border-radius: 30px;
+    background: rgba(25, 229, 27, .10);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+/* BUTTONS */
 
 .staff-management-content .primary-button,
-.staff-management-content .secondary-button,
-.staff-management-content .danger-button {
-    min-height: 41px;
+.staff-modal .primary-button {
     display: inline-flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     gap: 9px;
+    min-height: 41px;
     padding: 0 17px;
-    border-radius: 9px;
+    border: 1px solid rgba(25, 229, 27, .55);
+    border-radius: 10px;
+    background: var(--green, #19e51b);
+    color: #071608;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.staff-management-content .primary-button:hover,
+.staff-modal .primary-button:hover {
+    background: #42f542;
+    transform: translateY(-1px);
+}
+
+.staff-management-content .secondary-button,
+.staff-modal .secondary-button {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 9px;
+    min-height: 41px;
+    padding: 0 16px;
+    border: 1px solid rgba(255, 255, 255, .19);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .10);
+    color: #fff;
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
-    transition: 0.2s ease;
+    transition: .2s ease;
 }
 
-.staff-management-content .primary-button {
-    color: #071008;
-    background: var(--staff-green);
-    border: 1px solid var(--staff-green);
-    box-shadow: 0 4px 13px rgba(25, 229, 27, 0.15);
+.staff-management-content .secondary-button:hover,
+.staff-modal .secondary-button:hover {
+    background: rgba(25, 229, 27, .12);
+    border-color: rgba(25, 229, 27, .50);
 }
 
-.staff-management-content .primary-button:hover {
-    background: #12d814;
-    border-color: #12d814;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 17px rgba(25, 229, 27, 0.20);
-}
-
-.staff-management-content .secondary-button {
-    color: var(--staff-text);
-    background: var(--staff-surface-solid);
-    border: 1px solid var(--staff-border);
-}
-
-.staff-management-content .secondary-button:hover {
-    background: var(--staff-surface-hover);
-    border-color: rgba(25, 229, 27, 0.5);
-}
-
-.staff-management-content .danger-button {
-    color: #ffffff;
-    background: #e34444;
-    border: 1px solid #e34444;
-}
-
-.staff-management-content .danger-button:hover {
-    background: #ca3030;
-    transform: translateY(-1px);
-}
-
-/* =========================================================
-   5. TOOLBAR
-========================================================= */
+/* SEARCH AND FILTERS */
 
 .staff-toolbar {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    gap: 14px;
-    margin-bottom: 19px;
+    align-items: end;
+    gap: 15px;
+    margin-bottom: 20px;
 }
 
 .staff-search {
     position: relative;
     flex: 1;
-    max-width: 360px;
 }
 
-.staff-search > i {
+.staff-search i {
     position: absolute;
     top: 50%;
-    left: 14px;
+    left: 16px;
     transform: translateY(-50%);
-    color: var(--staff-muted);
+    color: #c1d0c4;
     font-size: 13px;
 }
 
 .staff-search input {
     width: 100%;
-    height: 42px;
-    padding: 0 14px 0 39px;
-    border: 1px solid var(--staff-border);
-    border-radius: 9px;
+    height: 43px;
+    padding: 0 16px 0 43px;
+    border: 1px solid var(--border);
+    border-radius: 11px;
     outline: none;
-    background: var(--staff-input-bg);
-    color: var(--staff-text);
+    background: var(--input);
+    color: white;
     font-size: 12px;
-    transition: 0.2s ease;
-}
-
-.staff-search input:focus {
-    border-color: var(--staff-green-dark);
-    box-shadow: 0 0 0 3px rgba(25, 229, 27, 0.09);
 }
 
 .staff-search input::placeholder {
-    color: var(--staff-placeholder);
-    opacity: 1;
+    color: #a8b8ab;
 }
 
 .staff-filters {
     display: flex;
-    align-items: center;
-    gap: 9px;
+    align-items: end;
+    gap: 12px;
 }
 
-.staff-filters select {
-    height: 42px;
-    min-width: 135px;
-    padding: 0 32px 0 12px;
-    border: 1px solid var(--staff-border);
-    border-radius: 9px;
-    outline: none;
-    background: var(--staff-input-bg);
-    color: var(--staff-text);
+.staff-filter-group label {
+    display: block;
+    margin-bottom: 8px;
+    text-align: center;
     font-size: 12px;
+    font-weight: 800;
+}
+
+.staff-filter-group select {
+    min-width: 135px;
+    height: 43px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #142019;
+    color: white;
+    font-size: 12px;
+    outline: none;
     cursor: pointer;
 }
 
-.staff-filters select:focus {
-    border-color: var(--staff-green-dark);
+.staff-search input:focus,
+.staff-filter-group select:focus {
+    border-color: #19e51b;
+    box-shadow: 0 0 0 3px rgba(25, 229, 27, .10);
 }
 
-.staff-filters option {
-    background: var(--staff-surface-solid);
-    color: var(--staff-text);
-}
-
-/* =========================================================
-   6. STAFF TABLE
-========================================================= */
+/* TABLE */
 
 .staff-table-wrapper {
     width: 100%;
     overflow-x: auto;
-    border: 1px solid var(--staff-border);
+    border: 1px solid var(--border);
     border-radius: 12px;
 }
 
@@ -306,1083 +225,697 @@ body.dark-mode .staff-management-content {
     width: 100%;
     min-width: 850px;
     border-collapse: collapse;
-    text-align: left;
 }
 
 .staff-management-table thead {
-    background: var(--staff-input-bg);
+    background: rgba(25,229,27,.07);
 }
 
 .staff-management-table th {
-    padding: 15px 16px;
-    color: var(--staff-muted);
+    padding: 15px 13px;
+    text-align: left;
+    color: #a5b0a7;
     font-size: 10px;
     font-weight: 800;
-    letter-spacing: 0.55px;
-    text-transform: uppercase;
     white-space: nowrap;
-    border-bottom: 1px solid var(--staff-border);
 }
 
 .staff-management-table td {
-    padding: 14px 16px;
-    color: var(--staff-text);
+    padding: 14px 13px;
+    border-bottom: 1px solid rgba(255, 255, 255, .10);
+    color: #fff;
     font-size: 12px;
-    border-bottom: 1px solid var(--staff-border);
-    white-space: nowrap;
-}
-
-.staff-management-table tbody tr {
-    transition: background 0.2s ease;
+    vertical-align: middle;
 }
 
 .staff-management-table tbody tr:hover {
-    background: var(--staff-surface-hover);
-}
-
-.staff-management-table tbody tr:last-child td {
-    border-bottom: none;
+    background: rgba(25, 229, 27, .06);
 }
 
 .staff-name-cell {
     display: flex;
     align-items: center;
-    gap: 11px;
-    min-width: 190px;
+    gap: 12px;
 }
 
 .staff-avatar {
-    width: 36px;
-    height: 36px;
-    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 10px;
-    color: #087b12;
-    background: var(--staff-green-soft);
-    font-size: 11px;
-    font-weight: 800;
-}
-
-.staff-name-information {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #19e51b;
+    color: #071608;
+    font-size: 14px;
 }
 
 .staff-name-information strong {
-    color: var(--staff-text);
+    display: block;
+    margin-bottom: 5px;
     font-size: 12px;
-    font-weight: 700;
 }
 
-.staff-name-information span {
-    color: var(--staff-muted);
+.staff-name-information small {
+    color: #b7c5b9;
     font-size: 10px;
 }
 
 .staff-id {
-    color: var(--staff-muted);
-    font-weight: 600;
+    color: #19e51b;
+    font-weight: 800;
 }
 
-.staff-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
+.staff-price {
+    color: #19e51b;
+    font-weight: 800;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 8px 11px;
     border-radius: 30px;
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 800;
+    white-space: nowrap;
 }
 
-.staff-status::before {
-    content: "";
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
+.status-badge.active {
+    background: rgba(25, 229, 27, .15);
+    color: #6af77b;
 }
 
-.staff-status.active {
-    color: #138b35;
-    background: rgba(25, 229, 27, 0.12);
+.status-badge.on-leave {
+    background: rgba(255, 195, 64, .16);
+    color: #ffd16b;
 }
 
-.staff-status.active::before {
-    background: #19c94a;
+.status-badge.inactive {
+    background: rgba(255, 88, 88, .16);
+    color: #ff9898;
 }
-
-.staff-status.inactive {
-    color: #a56b27;
-    background: rgba(230, 166, 66, 0.13);
-}
-
-.staff-status.inactive::before {
-    background: #d99b36;
-}
-
-/* TABLE ACTIONS */
 
 .staff-actions {
     display: flex;
-    align-items: center;
-    gap: 6px;
+    gap: 7px;
 }
 
-.action-button {
-    width: 30px;
-    height: 30px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--staff-border);
-    border-radius: 8px;
-    background: var(--staff-surface-solid);
-    color: var(--staff-muted);
-    font-size: 11px;
+.staff-actions button {
+    display: grid;
+    place-items: center;
+    width: 35px;
+    height: 35px;
+    border: 1px solid rgba(255, 255, 255, .20);
+    border-radius: 9px;
+    background: rgba(0,0,0,.16);
+    color: white;
     cursor: pointer;
-    transition: 0.2s ease;
 }
 
-.action-button:hover {
-    color: #119b19;
-    border-color: var(--staff-green-dark);
-    background: var(--staff-green-soft);
+.staff-actions button:hover {
+    border-color: #19e51b;
+    background: rgba(25, 229, 27, .12);
 }
 
-.action-button.delete:hover {
-    color: #e34444;
-    border-color: #e34444;
-    background: rgba(227, 68, 68, 0.08);
+.staff-actions .archive-action {
+    color: #ff8585;
+    border-color: rgba(255, 90, 90, .35);
 }
 
-/* EMPTY TABLE */
-
-.empty-state {
-    padding: 45px 20px !important;
-    text-align: center;
-    color: var(--staff-muted) !important;
+.staff-actions .restore-action {
+    color: #69f59b;
 }
-
-.empty-state i {
-    display: block;
-    margin-bottom: 12px;
-    color: var(--staff-green-dark);
-    font-size: 27px;
-}
-
-.empty-state strong {
-    display: block;
-    margin-bottom: 6px;
-    color: var(--staff-text);
-    font-size: 13px;
-}
-
-.empty-state span {
-    font-size: 11px;
-}
-
-/* TABLE FOOTER */
 
 .staff-table-footer {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    margin-top: 16px;
-}
-
-.staff-table-footer p {
-    margin: 0;
-    color: var(--staff-muted);
-    font-size: 11px;
-}
-
-/* =========================================================
-   7. MODAL OVERLAY
-========================================================= */
-
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 20px;
-
-    background: rgba(8, 15, 9, 0.55);
-    backdrop-filter: blur(7px);
-    -webkit-backdrop-filter: blur(7px);
-
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-
-    transition: opacity 0.22s ease, visibility 0.22s ease;
+    gap: 15px;
+    margin-top: 19px;
+    color: #e0e9e2;
+    font-size: 12px;
 }
 
-.modal-overlay.active,
-.modal-overlay.show {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-}
 
+
+
+/* STAFF MODALS AND VIEW DETAILS */
+#staffFormModal, #viewStaffModal, #deleteStaffModal {
+    position: fixed; inset: 0; z-index: 99999;
+    display: flex; justify-content: center; align-items: center;
+    padding: 20px; overflow-y: auto;
+    background: rgba(0,0,0,.10) !important;
+    backdrop-filter: blur(4px) brightness(1) !important;
+    -webkit-backdrop-filter: blur(4px) brightness(1) !important;
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity .25s ease, visibility .25s ease;
+}
+#staffFormModal.active, #viewStaffModal.active, #deleteStaffModal.active,
+#staffFormModal.show, #viewStaffModal.show, #deleteStaffModal.show {
+    opacity: 1; visibility: visible; pointer-events: auto;
+}
 .staff-modal {
-    position: relative;
-    width: min(680px, 100%);
-    max-height: min(90vh, 850px);
-    overflow-y: auto;
-
-    padding: 25px;
-    border: 1px solid var(--staff-border);
-    border-radius: 18px;
-
-    background: var(--staff-surface-solid);
-    color: var(--staff-text);
-
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.20);
-
-    transform: translateY(15px) scale(0.985);
-    transition: transform 0.22s ease;
-}
-
-.modal-overlay.active .staff-modal,
-.modal-overlay.show .staff-modal {
-    transform: translateY(0) scale(1);
-}
-
-.staff-modal::-webkit-scrollbar {
-    width: 6px;
-}
-
-.staff-modal::-webkit-scrollbar-thumb {
-    background: rgba(120, 140, 120, 0.35);
-    border-radius: 20px;
-}
-
-/* =========================================================
-   8. MODAL HEADER
-========================================================= */
-
-.staff-modal .modal-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 18px;
-
-    padding-bottom: 20px;
-    margin-bottom: 21px;
-    border-bottom: 1px solid var(--staff-border);
-}
-
-.modal-heading-content {
-    min-width: 0;
-}
-
-.modal-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    margin-bottom: 9px;
-    color: #119b19;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 1px;
-}
-
-.staff-modal .modal-header h2 {
-    margin: 0 0 6px;
-    color: var(--staff-text);
-    font-size: 20px;
-    font-weight: 800;
-    letter-spacing: -0.4px;
-}
-
-.staff-modal .modal-header p {
-    margin: 0;
-    color: var(--staff-muted);
-    font-size: 11px;
-    line-height: 1.6;
-}
-
-.modal-close-button {
-    width: 35px;
-    height: 35px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border: 1px solid var(--staff-border);
-    border-radius: 9px;
-    background: var(--staff-input-bg);
-    color: var(--staff-muted);
-
-    font-size: 13px;
-    cursor: pointer;
-    transition: 0.2s ease;
-}
-
-.modal-close-button:hover {
-    color: #e34444;
-    border-color: rgba(227, 68, 68, 0.4);
-    background: rgba(227, 68, 68, 0.08);
-}
-
-/* =========================================================
-   9. FORM SECTION
-========================================================= */
-
-.staff-form-section {
-    padding: 18px;
-    border: 1px solid var(--staff-border);
-    border-radius: 13px;
-    background: var(--staff-input-bg);
-}
-
-.form-section-heading {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    margin-bottom: 19px;
-}
-
-.form-section-icon {
-    width: 36px;
-    height: 36px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 9px;
-    background: var(--staff-green-soft);
-    color: #119b19;
-    font-size: 14px;
-}
-
-.form-section-heading h3 {
-    margin: 0 0 4px;
-    color: var(--staff-text);
-    font-size: 12px;
-    font-weight: 800;
-}
-
-.form-section-heading p {
-    margin: 0;
-    color: var(--staff-muted);
-    font-size: 10px;
-}
-
-.staff-form-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 17px 15px;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-    min-width: 0;
-}
-
-.form-group.full-width {
-    grid-column: 1 / -1;
-}
-
-.form-group label {
-    color: var(--staff-text);
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.form-group label span {
-    color: #e34444;
-}
-
-/* =========================================================
-   10. INPUT FIELDS
-========================================================= */
-
-.input-with-icon {
-    position: relative;
-    width: 100%;
-}
-
-.input-with-icon > i {
-    position: absolute;
-    top: 50%;
-    left: 13px;
-    z-index: 1;
-    transform: translateY(-50%);
-    color: var(--staff-muted);
-    font-size: 12px;
-    pointer-events: none;
-}
-
-.input-with-icon input,
-.input-with-icon select,
-.input-with-icon textarea {
-    display: block;
-    width: 100%;
-    min-width: 0;
-
-    border: 1px solid var(--staff-border);
-    border-radius: 9px;
-    outline: none;
-
-    background: var(--staff-surface-solid);
-    color: var(--staff-text);
-
-    font-size: 12px;
-    font-weight: 500;
-
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.input-with-icon input,
-.input-with-icon select {
-    height: 42px;
-    padding: 0 12px 0 36px;
-}
-
-.input-with-icon select {
-    cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    padding-right: 30px;
-}
-
-.select-with-icon::after {
-    content: "\f107";
-    position: absolute;
-    top: 50%;
-    right: 13px;
-    transform: translateY(-50%);
-    color: var(--staff-muted);
-    font-family: "Font Awesome 6 Free";
-    font-weight: 900;
-    font-size: 11px;
-    pointer-events: none;
-}
-
-.input-with-icon textarea {
-    min-height: 82px;
-    resize: vertical;
-    padding: 12px 12px 12px 36px;
-    line-height: 1.6;
-}
-
-.textarea-with-icon > i {
-    top: 15px;
-    transform: none;
-}
-
-.input-with-icon input::placeholder,
-.input-with-icon textarea::placeholder {
-    color: var(--staff-placeholder);
-    opacity: 1;
-}
-
-.input-with-icon input:focus,
-.input-with-icon select:focus,
-.input-with-icon textarea:focus {
-    border-color: var(--staff-green-dark);
-    box-shadow: 0 0 0 3px rgba(25, 229, 27, 0.10);
-}
-
-.input-with-icon select option {
-    background: var(--staff-surface-solid);
-    color: var(--staff-text);
-}
-
-/* =========================================================
-   11. MODAL ACTIONS
-========================================================= */
-
-.staff-modal .modal-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 10px;
-
-    margin-top: 22px;
-    padding-top: 17px;
-    border-top: 1px solid var(--staff-border);
-}
-
-.staff-modal .modal-actions button {
-    min-width: 105px;
-    min-height: 41px;
-}
-
-.staff-modal .modal-actions .print-qr-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 0 14px;
-    border: 0;
-    border-radius: 9px;
-    background: #19e51b;
-    color: #102016;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-/* =========================================================
-   12. VIEW STAFF DETAILS
-========================================================= */
-
-.view-staff-modal {
-    max-width: 590px;
-}
-
-.staff-details-content {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-}
-
-.staff-modal .staff-attendance-qr-panel {
-    display: grid;
-    justify-items: center;
-    gap: 12px;
-    padding: 20px;
-    border: 1px solid var(--staff-border);
-    border-radius: 12px;
-    background: var(--staff-input-bg);
-    text-align: center;
-}
-
-.staff-modal .staff-attendance-qr-panel h3 {
-    margin: 0 0 6px;
-    color: var(--staff-text);
-}
-
-.staff-modal .staff-attendance-qr-panel p {
-    margin: 0;
-    color: var(--staff-muted);
-}
-
-.staff-modal .staff-attendance-qr-code {
-    display: grid;
-    width: 240px;
-    height: 240px;
-    place-items: center;
-    padding: 10px;
-    border-radius: 10px;
-    background: #ffffff;
-    color: #333333;
-}
-
-.staff-modal .staff-attendance-qr-code img {
-    display: block;
-    max-width: 100%;
-    height: auto;
-}
-
-.staff-modal .staff-attendance-qr-label {
-    color: var(--staff-text);
-    font-size: 13px;
-    letter-spacing: 0.06em;
-}
-
-.staff-details-profile {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 17px;
-    border: 1px solid var(--staff-border);
-    border-radius: 12px;
-    background: var(--staff-input-bg);
-}
-
-.staff-details-avatar {
-    width: 54px;
-    height: 54px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 13px;
-    background: var(--staff-green-soft);
-    color: #119b19;
-    font-size: 16px;
-    font-weight: 800;
-}
-
-.staff-details-profile h3 {
-    margin: 0 0 5px;
-    color: var(--staff-text);
-    font-size: 15px;
-    font-weight: 800;
-}
-
-.staff-details-profile p {
-    margin: 0 0 7px;
-    color: var(--staff-muted);
-    font-size: 11px;
-}
-
-.staff-details-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 11px;
-}
-
-.staff-detail-item {
-    min-width: 0;
-    padding: 13px;
-    border: 1px solid var(--staff-border);
-    border-radius: 10px;
-    background: var(--staff-surface-solid);
-}
-
-.staff-detail-item span {
-    display: block;
-    margin-bottom: 7px;
-    color: var(--staff-muted);
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-}
-
-.staff-detail-item strong {
-    display: block;
-    overflow-wrap: anywhere;
-    color: var(--staff-text);
-    font-size: 11px;
-    font-weight: 600;
-    line-height: 1.6;
-}
-
-/* =========================================================
-   13. DELETE MODAL
-========================================================= */
-
-.delete-staff-modal {
-    max-width: 410px;
-    padding: 30px;
-    text-align: center;
-}
-
-.delete-icon {
-    width: 58px;
-    height: 58px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 17px;
-    border-radius: 15px;
-    color: #e34444;
-    background: rgba(227, 68, 68, 0.10);
-    font-size: 21px;
-}
-
-.delete-staff-modal h2 {
-    margin: 0 0 10px;
-    color: var(--staff-text);
-    font-size: 18px;
-    font-weight: 800;
-}
-
-.delete-staff-modal > p {
-    margin: 0;
-    color: var(--staff-muted);
-    font-size: 11px;
-    line-height: 1.8;
-}
-
-.delete-staff-modal > p strong {
-    color: var(--staff-text);
-}
-
-.delete-staff-modal .modal-actions {
-    justify-content: center;
-    margin-top: 24px;
-}
-
-/* =========================================================
-   14. TOAST NOTIFICATION
-========================================================= */
-
-.toast-message {
-    position: fixed;
-    right: 25px;
-    bottom: 25px;
-    z-index: 10001;
-
-    display: flex;
-    align-items: center;
-    gap: 11px;
-
-    min-width: 250px;
-    max-width: calc(100% - 35px);
-    padding: 14px 17px;
-
-    border: 1px solid var(--staff-border);
-    border-radius: 11px;
-
-    background: var(--staff-surface-solid);
-    color: var(--staff-text);
-
-    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.12);
-
-    font-size: 11px;
-    font-weight: 600;
-
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(12px);
-    transition: 0.25s ease;
-}
-
-.toast-message.show {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-.toast-message i {
-    color: var(--staff-green-dark);
-    font-size: 16px;
-}
-
-/* =========================================================
-   15. FOOTER
-========================================================= */
-
-.staff-management-content .dashboard-footer {
-    margin-top: 25px;
-    padding: 15px 0;
-    text-align: center;
-}
-
-.staff-management-content .dashboard-footer p {
-    color: var(--staff-muted);
-    font-size: 10px;
-}
-
-/* =========================================================
-   16. DARK MODE REFINEMENTS
-========================================================= */
-
-body.dark-mode .staff-modal {
-    background: #171e18;
-    border-color: rgba(255, 255, 255, 0.10);
-    color: #edf5ee;
-}
-
-body.dark-mode .staff-form-section {
-    background: #101711;
-}
-
-body.dark-mode .input-with-icon input,
-body.dark-mode .input-with-icon select,
-body.dark-mode .input-with-icon textarea {
-    background: #101711;
-    border-color: rgba(255, 255, 255, 0.12);
-    color: #edf5ee;
-}
-
-body.dark-mode .input-with-icon input::placeholder,
-body.dark-mode .input-with-icon textarea::placeholder {
-    color: #78867a;
-}
-
-body.dark-mode .input-with-icon select option {
-    background: #171e18;
-    color: #edf5ee;
-}
-
-body.dark-mode .staff-detail-item {
-    background: #171e18;
-}
-
-body.dark-mode .staff-details-profile {
-    background: #101711;
-}
-
-body.dark-mode .modal-close-button {
-    background: #202a21;
-}
-
-/* =========================================================
-   17. RESPONSIVE DESIGN
-========================================================= */
+    position: relative; width: 100%; max-width: 610px;
+    max-height: calc(100dvh - 40px); overflow-y: auto;
+    padding: 27px; box-sizing: border-box;
+    border: 1px solid rgba(255,255,255,.20); border-radius: 21px;
+    background: linear-gradient(145deg,rgba(8,32,17,.99),rgba(5,24,12,.99));
+    color: #fff; box-shadow: 0 25px 80px rgba(0,0,0,.55);
+    transform: translateY(15px) scale(.97); transition: transform .25s ease;
+}
+.modal-overlay.active .staff-modal, .modal-overlay.show .staff-modal { transform: translateY(0) scale(1); }
+#viewStaffModal .staff-modal { max-width: 580px; }
+#deleteStaffModal .staff-modal { max-width: 460px; text-align: center; }
+.staff-modal .modal-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,.13); }
+.staff-modal .modal-header h2 { margin: 0 0 8px; font-size: 22px; color: #fff; }
+.staff-modal .modal-header p { margin: 0; font-size: 12px; color: #b7c7ba; }
+.staff-modal .modal-eyebrow { display: inline-block; margin-bottom: 9px; font-size: 10px; font-weight: 800; color: #6af77b; }
+.staff-modal .modal-close-button { display: grid; place-items: center; flex: none; width: 35px; height: 35px; border: 1px solid rgba(255,255,255,.20); border-radius: 10px; background: rgba(255,255,255,.10); color: #fff; cursor: pointer; }
+.staff-modal .modal-close-button:hover { color: #ff9999; background: rgba(255,80,80,.17); }
+.staff-modal .staff-form-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
+.staff-modal .form-group { min-width: 0; }
+.staff-modal .form-group.full-width { grid-column: 1/-1; }
+.staff-modal .form-group label { display: block; margin-bottom: 8px; font-size: 11px; font-weight: 800; color: #fff; }
+.staff-modal .form-group label span { color: #69f59b; }
+.staff-modal .input-with-icon { position: relative; }
+.staff-modal .input-with-icon > i { position: absolute; top: 15px; left: 13px; color: #b6c4b9; pointer-events: none; }
+.staff-modal .form-group input,
+.staff-modal .form-group select,
+.staff-modal .form-group textarea { width: 100%; min-height: 43px; box-sizing: border-box; padding: 0 13px; border: 1px solid rgba(255,255,255,.18); border-radius: 10px; background: #1c3a28; color: #fff; font-size: 12px; outline: none; }
+.staff-modal .form-group textarea { padding: 12px 13px; resize: vertical; }
+.staff-modal .input-with-icon > input,
+.staff-modal .input-with-icon > select,
+.staff-modal .input-with-icon > textarea { padding-left: 37px; }
+.staff-modal .form-group input:focus,
+.staff-modal .form-group select:focus,
+.staff-modal .form-group textarea:focus { border-color: #19e51b; box-shadow: 0 0 0 3px rgba(25,229,27,.10); }
+.staff-modal .form-group input::placeholder,
+.staff-modal .form-group textarea::placeholder { color: #a8b8ab; }
+.staff-modal .form-section-heading { display: flex; align-items: center; gap: 12px; margin: 15px 0 18px; }
+.staff-modal .form-section-heading h3 { margin: 0 0 5px; font-size: 14px; }
+.staff-modal .form-section-heading p { margin: 0; color: #b6c4b9; font-size: 11px; }
+.staff-modal .form-section-icon { display: grid; place-items: center; width: 35px; height: 35px; border-radius: 10px; background: rgba(25,229,27,.12); color: #6af77b; }
+.staff-modal .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 26px; }
+.staff-modal .primary-button, .staff-modal .secondary-button,
+.staff-modal .danger-button, .staff-modal .print-qr-button { display: inline-flex; justify-content: center; align-items: center; gap: 9px; min-height: 41px; padding: 0 17px; border-radius: 10px; font-size: 11px; font-weight: 800; cursor: pointer; }
+.staff-modal .primary-button { background: #19e51b; color: #071608; border: 1px solid rgba(25,229,27,.55); }
+.staff-modal .secondary-button, .staff-modal .print-qr-button { background: rgba(255,255,255,.10); color: #fff; border: 1px solid rgba(255,255,255,.19); }
+.staff-modal .danger-button { background: #8f2929; color: #fff; border: 1px solid rgba(255,90,90,.4); }
+.staff-modal .delete-icon { margin: 5px 0 20px; color: #ffc45e; font-size: 38px; }
+.staff-modal.delete-staff-modal h2 { margin: 0 0 13px; font-size: 21px; }
+.staff-modal.delete-staff-modal p { color: #bdcec0; font-size: 13px; line-height: 1.7; }
+.staff-modal.delete-staff-modal .modal-actions { justify-content: center; }
+.staff-modal .staff-details-content { color: #fff; font-size: 12px; }
+#toastMessage { position: fixed; right: 25px; bottom: 25px; z-index: 100001; display: flex; align-items: center; gap: 12px; padding: 15px 20px; border: 1px solid rgba(25,229,27,.4); border-radius: 12px; background: #10311d; color: #8aff98; font-size: 12px; opacity: 0; visibility: hidden; transform: translateY(15px); transition: .25s ease; pointer-events: none; }
+#toastMessage.show, #toastMessage.active { opacity: 1; visibility: visible; transform: translateY(0); }
 
 @media (max-width: 1100px) {
-    .staff-directory-panel {
-        padding: 20px;
-    }
-
-    .staff-toolbar {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    .staff-search {
-        max-width: 100%;
-    }
-
-    .staff-filters {
-        flex-wrap: wrap;
-    }
+    .staff-toolbar, .staff-directory-heading { flex-wrap: wrap; }
+    .staff-search { flex-basis: 100%; max-width: none !important; }
+}
+@media (max-width: 700px) {
+    .staff-management-content .staff-directory-panel { padding: 16px; }
+    .staff-header-actions, .staff-filters, .staff-table-footer { flex-wrap: wrap; }
+    .staff-header-actions { width: 100%; }
+    .staff-modal { padding: 20px; }
+    .staff-modal .staff-form-grid { grid-template-columns: 1fr; }
+    .staff-modal .form-group.full-width { grid-column: auto; }
 }
 
-@media (max-width: 850px) {
-    .staff-management-content .content-introduction {
-        align-items: flex-start;
-        flex-direction: column;
-    }
 
-    .staff-directory-heading {
-        align-items: flex-start;
-    }
 
-    .staff-filters select {
-        flex: 1;
-    }
+/* =========================================================
+   INVENTORY EXACT GLASS PALETTE — SOURCE-MATCHED
+   Adapted from the actual inventory.css variables.
+   No opaque green gradients or forced solid backgrounds.
+========================================================= */
+.staff-management-content {
+    --staff-glass: rgba(10, 24, 16, 0.30);
+    --staff-border: rgba(255, 255, 255, 0.16);
+    --staff-muted: #b3c0b5;
+    --staff-text: #f3f8f3;
+    --staff-input: rgba(5, 17, 10, 0.48);
+    --staff-row: rgba(255, 255, 255, 0.025);
+    --staff-hover: rgba(25, 229, 27, 0.075);
+}
+body.dark-mode .staff-management-content {
+    --staff-glass: rgba(5, 12, 8, 0.57);
+    --staff-border: rgba(255, 255, 255, 0.12);
+    --staff-muted: #aab7ad;
+    --staff-input: rgba(0, 0, 0, 0.36);
+    --staff-row: rgba(255, 255, 255, 0.018);
+    --staff-hover: rgba(25, 229, 27, 0.085);
+}
+.staff-management-content .staff-directory-panel,
+.staff-management-content .archived-staff-panel {
+    position: relative;
+    padding: 22px;
+    background: var(--staff-glass) !important;
+    border: 1px solid var(--staff-border) !important;
+    border-radius: 18px;
+    backdrop-filter: blur(13px) saturate(135%);
+    -webkit-backdrop-filter: blur(13px) saturate(135%);
+    box-shadow: 0 12px 35px rgba(0,0,0,.14);
+    color: var(--staff-text);
+}
+.staff-management-content .staff-table-wrapper {
+    background: transparent !important;
+    border: 1px solid var(--staff-border) !important;
+    border-radius: 12px;
+    overflow-x: auto;
+}
+.staff-management-content .staff-management-table {
+    background: transparent !important;
+    border-collapse: collapse;
+}
+.staff-management-content .staff-management-table thead,
+.staff-management-content .staff-management-table thead tr,
+.staff-management-content .staff-management-table thead th {
+    background: rgba(25,229,27,.075) !important;
+}
+.staff-management-content .staff-management-table th {
+    padding: 14px 15px;
+    color: var(--staff-muted) !important;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .45px;
+    border-bottom: 1px solid var(--staff-border);
+}
+.staff-management-content .staff-management-table td {
+    padding: 13px 15px;
+    color: var(--staff-text);
+    font-size: 11px;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    background: transparent !important;
+}
+.staff-management-content .staff-management-table tbody {
+    background: transparent !important;
+}
+.staff-management-content .staff-management-table tbody tr {
+    background: var(--staff-row) !important;
+}
+.staff-management-content .staff-management-table tbody tr:hover {
+    background: var(--staff-hover) !important;
+}
+.staff-management-content .staff-search input {
+    background: var(--staff-input) !important;
+    border-color: var(--staff-border);
+    color: var(--staff-text);
+}
+.staff-management-content .staff-filter-group select {
+    background: var(--staff-input) !important;
+    border-color: var(--staff-border);
+    color: var(--staff-text);
+}
+.staff-management-content .staff-directory-heading h2,
+.staff-management-content .staff-name-information strong {
+    color: var(--staff-text) !important;
+}
+.staff-management-content .staff-directory-heading p,
+.staff-management-content .staff-name-information small {
+    color: var(--staff-muted) !important;
+}
+.staff-management-content [hidden] { display: none !important; }
+
+/* DARK MODE ONLY — richer Inventory / Orders green liquid glass */
+body.dark-mode .staff-management-content {
+    --staff-glass: rgba(10, 43, 24, 0.78);
+    --staff-border: rgba(157, 223, 169, 0.19);
+    --staff-input: rgba(29, 72, 44, 0.49);
+    --staff-row: rgba(19, 69, 37, 0.16);
+    --staff-hover: rgba(49, 133, 69, 0.20);
+}
+body.dark-mode .staff-management-content .staff-directory-panel,
+body.dark-mode .staff-management-content .archived-staff-panel {
+    background: var(--staff-glass) !important;
+    backdrop-filter: blur(14px) saturate(145%);
+    -webkit-backdrop-filter: blur(14px) saturate(145%);
+}
+body.dark-mode .staff-management-content .staff-management-table thead,
+body.dark-mode .staff-management-content .staff-management-table thead tr,
+body.dark-mode .staff-management-content .staff-management-table thead th {
+    background: rgba(49, 102, 62, 0.58) !important;
+    color: #f4fff5 !important;
+}
+body.dark-mode .staff-management-content .staff-management-table tbody tr {
+    background: var(--staff-row) !important;
+}
+body.dark-mode .staff-management-content .staff-management-table tbody tr:hover {
+    background: var(--staff-hover) !important;
+}
+body.dark-mode .staff-management-content .staff-search input,
+body.dark-mode .staff-management-content .staff-filter-group select {
+    background: var(--staff-input) !important;
+    border-color: var(--staff-border) !important;
+    color: #f4fff5 !important;
 }
 
-@media (max-width: 600px) {
-    .staff-directory-panel {
-        padding: 15px;
-        border-radius: 14px;
-    }
+/* ===================================================
+   PRINTIFY STAFF MANAGEMENT
+   INVENTORY SCREENSHOT COLOR MATCH
+   FOREST GREEN + TRANSPARENT GLASS
+   SIDEBAR / TOPBAR UNCHANGED
+=================================================== */
 
-    .staff-directory-heading {
-        flex-direction: column;
-    }
+/* MAIN INVENTORY PALETTE */
 
-    .staff-directory-heading .primary-button {
-        width: 100%;
-    }
+.staff-management-content {
+    --inventory-green: #19e51b;
+    --inventory-text: #f3fff4;
+    --inventory-muted: #c0cec2;
 
-    .staff-filters {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-    }
+    --inventory-glass: rgba(15, 49, 27, 0.88);
+    --inventory-input: rgba(255, 255, 255, 0.09);
+    --inventory-border: rgba(184, 221, 191, 0.22);
+    --inventory-hover: rgba(25, 229, 27, 0.10);
 
-    .staff-filters select {
-        width: 100%;
-        min-width: 0;
-    }
-
-    .staff-filters .secondary-button {
-        grid-column: 1 / -1;
-    }
-
-    .modal-overlay {
-        align-items: center;
-        padding: 12px;
-    }
-
-    .staff-modal {
-        max-height: calc(100vh - 24px);
-        padding: 19px;
-        border-radius: 15px;
-    }
-
-    .staff-form-grid {
-        grid-template-columns: 1fr;
-        gap: 14px;
-    }
-
-    .form-group.full-width {
-        grid-column: auto;
-    }
-
-    .staff-form-section {
-        padding: 14px;
-    }
-
-    .staff-modal .modal-header h2 {
-        font-size: 18px;
-    }
-
-    .staff-details-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .staff-modal .modal-actions {
-        flex-direction: column-reverse;
-    }
-
-    .staff-modal .modal-actions button {
-        width: 100%;
-    }
-
-    .toast-message {
-        right: 15px;
-        bottom: 15px;
-    }
+    color: var(--inventory-text);
 }
 
-@media (max-width: 380px) {
-    .staff-management-content .content-introduction h2 {
-        font-size: 18px;
-    }
+/* SAME GREEN APPEARANCE IN BOTH THEMES */
 
-    .staff-filters {
-        grid-template-columns: 1fr;
-    }
+body.dark-mode .staff-management-content,
+body:not(.dark-mode) .staff-management-content {
+    --inventory-glass: rgba(15, 49, 27, 0.88);
+    --inventory-input: rgba(255, 255, 255, 0.09);
+    --inventory-border: rgba(184, 221, 191, 0.22);
+    --inventory-text: #f3fff4;
+    --inventory-muted: #c0cec2;
+}
 
-    .staff-filters .secondary-button {
-        grid-column: auto;
-    }
+/* ==========================================
+   STAFF DIRECTORY PANEL
+========================================== */
 
-    .staff-modal {
-        padding: 16px;
-    }
+.staff-management-content .staff-directory-panel {
+    background: var(--inventory-glass) !important;
+    border: 1px solid var(--inventory-border) !important;
+    border-radius: 19px;
 
-    .form-section-heading p {
-        font-size: 9px;
-    }
+    backdrop-filter: blur(16px) saturate(125%);
+    -webkit-backdrop-filter: blur(16px) saturate(125%);
+
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+}
+
+.staff-management-content .staff-directory-heading h2 {
+    color: #ffffff !important;
+}
+
+.staff-management-content .staff-directory-heading p {
+    color: var(--inventory-muted) !important;
+}
+
+/* ==========================================
+   BREADCRUMB
+========================================== */
+
+.staff-management-content .breadcrumb {
+    background: rgba(11, 47, 24, 0.94) !important;
+    border: 1px solid var(--inventory-border) !important;
+    border-radius: 11px;
+    color: #ffffff !important;
+
+    backdrop-filter: blur(12px);
+}
+
+.staff-management-content .breadcrumb a {
+    color: var(--inventory-green) !important;
+}
+
+.staff-management-content .breadcrumb-current {
+    color: #ffffff !important;
+}
+
+.staff-management-content .breadcrumb-separator {
+    color: #c5d5c8 !important;
+}
+
+/* ==========================================
+   SEARCH BAR
+========================================== */
+
+.staff-management-content .staff-search input,
+.staff-management-content #searchInput {
+    background: var(--inventory-input) !important;
+    color: #ffffff !important;
+
+    border: 1px solid
+        var(--inventory-border) !important;
+
+    border-radius: 11px;
+
+    height: 47px;
+
+    box-shadow: none !important;
+}
+
+.staff-management-content #searchInput::placeholder {
+    color: #b6c9bb !important;
+    opacity: 1;
+}
+
+.staff-management-content .staff-search > i {
+    color: #d0dfd2 !important;
+}
+
+.staff-management-content #searchInput:hover {
+    border-color: rgba(25, 229, 27, 0.45) !important;
+}
+
+.staff-management-content #searchInput:focus {
+    border-color: #19e51b !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    box-shadow:
+        0 0 0 3px rgba(25, 229, 27, 0.12) !important;
+}
+
+/* ==========================================
+   ALL POSITIONS / ALL STATUS
+========================================== */
+
+.staff-management-content .staff-filter-group label {
+    color: #ffffff !important;
+    font-weight: 800;
+}
+
+.staff-management-content #positionFilter,
+.staff-management-content #statusFilter {
+    background: var(--inventory-input) !important;
+    color: #ffffff !important;
+
+    border: 1px solid
+        var(--inventory-border) !important;
+
+    border-radius: 10px;
+    height: 47px;
+
+    min-width: 142px;
+    padding: 0 14px;
+
+    color-scheme: dark;
+    cursor: pointer;
+}
+
+.staff-management-content #positionFilter option,
+.staff-management-content #statusFilter option {
+    background: #193b27 !important;
+    color: #ffffff !important;
+}
+
+.staff-management-content #positionFilter:hover,
+.staff-management-content #statusFilter:hover {
+    border-color: rgba(25, 229, 27, 0.45) !important;
+}
+
+.staff-management-content #positionFilter:focus,
+.staff-management-content #statusFilter:focus {
+    border-color: #19e51b !important;
+    box-shadow:
+        0 0 0 3px rgba(25, 229, 27, 0.12) !important;
+}
+
+/* ==========================================
+   RESET BUTTON
+========================================== */
+
+.staff-management-content #resetFiltersButton {
+    height: 47px;
+
+    background: var(--inventory-input) !important;
+    color: #ffffff !important;
+
+    border: 1px solid
+        var(--inventory-border) !important;
+
+    border-radius: 10px;
+}
+
+.staff-management-content #resetFiltersButton i {
+    color: #ffffff !important;
+}
+
+.staff-management-content #resetFiltersButton:hover {
+    background: rgba(25, 229, 27, 0.13) !important;
+    border-color: #19e51b !important;
+}
+
+/* ==========================================
+   STAFF COUNT BADGE
+========================================== */
+
+.staff-management-content .staff-count-badge {
+    background: rgba(25, 229, 27, 0.10) !important;
+    border: 1px solid rgba(25, 229, 27, 0.30) !important;
+    color: #ffffff !important;
+}
+
+/* ==========================================
+   STAFF TABLE
+========================================== */
+
+.staff-management-content .staff-table-wrapper {
+    background: rgba(8, 40, 20, 0.20);
+    border: 1px solid var(--inventory-border) !important;
+    border-radius: 12px;
+}
+
+.staff-management-content .staff-management-table thead {
+    background: rgba(109, 165, 121, 0.25) !important;
+}
+
+.staff-management-content .staff-management-table th {
+    color: #e2eee5 !important;
+}
+
+.staff-management-content .staff-management-table td {
+    color: #ffffff !important;
+    border-bottom: 1px solid
+        rgba(184, 221, 191, 0.13) !important;
+}
+
+.staff-management-content
+.staff-management-table tbody tr:hover {
+    background: rgba(25, 229, 27, 0.08) !important;
+}
+
+/* ==========================================
+   ARCHIVE BUTTON - SUBTLE RED
+========================================== */
+
+.staff-management-content .archive-list-button {
+    background: rgba(255, 255, 255, 0.09) !important;
+    border: 1px solid var(--inventory-border) !important;
+    color: #ffffff !important;
+}
+
+.staff-management-content .archive-list-button:hover {
+    background: rgba(255, 90, 90, 0.13) !important;
+    border-color: rgba(255, 90, 90, 0.40) !important;
+}
+
+.staff-management-content
+.staff-actions .archive-action {
+    background: rgba(255, 90, 90, 0.11) !important;
+    color: #ff8d8d !important;
+    border: 1px solid rgba(255, 90, 90, 0.30) !important;
+}
+
+/* ==========================================
+   EXPORT BUTTONS
+========================================== */
+
+.staff-management-content .staff-export-actions
+.secondary-button {
+    background: var(--inventory-input) !important;
+    color: #ffffff !important;
+    border: 1px solid var(--inventory-border) !important;
+}
+
+.staff-management-content .staff-export-actions
+.secondary-button:hover {
+    background: var(--inventory-hover) !important;
+    border-color: #19e51b !important;
+}
+
+/* ==========================================
+   FOOTER
+========================================== */
+
+.staff-management-content .staff-table-footer {
+    color: #d8e8dc !important;
+}
+
+.staff-management-content .staff-table-footer p {
+    color: #d8e8dc !important;
+}
+
+/* ==========================================
+   KEEP ARCHIVE ANIMATION
+========================================== */
+
+.staff-management-content [hidden] {
+    display: none !important;
+}
+
+.staff-management-content .staff-view-exit {
+    opacity: 0;
+    transform: translateY(-8px);
+}
+
+.staff-management-content .staff-view-enter {
+    opacity: 0;
+    transform: translateY(12px);
+}
+
+.staff-management-content .staff-view-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition:
+        opacity 0.28s ease,
+        transform 0.28s ease;
 }
 
 /* =========================================
-   ADMIN PROFILE DROPDOWN - OVERLAY FIX
+   BREADCRUMB ONLY - LIGHT & DARK MODE
 ========================================= */
 
-/* Profile button container */
-.topbar-profile,
-.profile-container,
-.profile-menu-container {
-    position: relative;
-    z-index: 10000;
+/* LIGHT MODE - INVENTORY GREEN */
+body:not(.dark-mode) .staff-management-content .breadcrumb {
+    background: rgba(11, 47, 24, 0.94) !important;
+    border: 1px solid rgba(184, 221, 191, 0.22) !important;
+    color: #ffffff !important;
 }
 
-/* Floating dropdown */
-#profileDropdown,
-.profile-dropdown {
-    position: absolute !important;
-    top: calc(100% + 12px) !important;
-    right: 0 !important;
-    left: auto !important;
-
-    width: 275px;
-    min-width: 275px;
-
-    display: none;
-    flex-direction: column;
-
-    padding: 15px;
-    margin: 0;
-
-    background: rgba(7, 22, 12, 0.97) !important;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 18px;
-
-    backdrop-filter: blur(25px) saturate(150%);
-    -webkit-backdrop-filter: blur(25px) saturate(150%);
-
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.40);
-
-    z-index: 10001 !important;
-    overflow: visible;
+body:not(.dark-mode) .staff-management-content .breadcrumb a {
+    color: #19e51b !important;
 }
 
-/* Show dropdown */
-#profileDropdown.show,
-.profile-dropdown.show {
-    display: flex !important;
+body:not(.dark-mode) .staff-management-content .breadcrumb-current {
+    color: #ffffff !important;
 }
 
-/* Account information */
-#profileDropdown .profile-dropdown-header,
-.profile-dropdown .profile-dropdown-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 8px 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.13);
+body:not(.dark-mode) .staff-management-content .breadcrumb-separator {
+    color: #c5d5c8 !important;
 }
 
-/* Dropdown menu items */
-#profileDropdown a,
-#profileDropdown button,
-.profile-dropdown a,
-.profile-dropdown button {
-    position: relative;
-    width: 100%;
-    min-height: 43px;
-
-    display: flex;
-    align-items: center;
-    gap: 12px;
-
-    padding: 10px 12px;
-    margin-top: 5px;
-
-    color: #e9f0eb;
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: 10px;
-
-    font-family: inherit;
-    font-size: 12px;
-    text-align: left;
-    text-decoration: none;
-
-    cursor: pointer;
-    transition: all .2s ease;
+/* DARK MODE - RESTORE PREVIOUS COLOR */
+body.dark-mode .staff-management-content .breadcrumb {
+    background: rgba(10, 24, 16, 0.30) !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    color: #f3fff4 !important;
 }
 
-#profileDropdown a:hover,
-#profileDropdown button:hover,
-.profile-dropdown a:hover,
-.profile-dropdown button:hover {
-    color: #19e51b;
-    background: rgba(25, 229, 27, 0.10);
-    border-color: rgba(25, 229, 27, 0.15);
+body.dark-mode .staff-management-content .breadcrumb a {
+    color: #19e51b !important;
 }
 
-/* Settings icon */
-#profileDropdown .settings-link i,
-.profile-dropdown .settings-link i {
-    color: #aab8ad;
+body.dark-mode .staff-management-content .breadcrumb-current {
+    color: #f3fff4 !important;
 }
 
-/* Logout */
-#profileDropdown .logout-button,
-.profile-dropdown .logout-button {
-    color: #ff7777;
-}
-
-#profileDropdown .logout-button:hover,
-.profile-dropdown .logout-button:hover {
-    color: #ff7777;
-    background: rgba(255, 75, 75, 0.10);
-    border-color: rgba(255, 75, 75, 0.16);
-}
-
-/* Prevent dashboard content from covering dropdown */
-.topbar,
-.topbar-container,
-.dashboard-topbar {
-    position: relative;
-    z-index: 999;
-    overflow: visible !important;
-}
-
-/* Avoid clipping the floating dropdown */
-.dashboard-container,
-.main-content,
-.content-wrapper {
-    overflow: visible;
-}
-
-/* Responsive */
-@media (max-width: 480px) {
-    #profileDropdown,
-    .profile-dropdown {
-        width: 250px;
-        min-width: 250px;
-        right: -5px !important;
-    }
+body.dark-mode .staff-management-content .breadcrumb-separator {
+    color: #b3c0b5 !important;
 }

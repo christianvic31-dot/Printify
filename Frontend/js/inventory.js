@@ -1,1382 +1,1052 @@
-/* =========================================================
-   PRINTIFY CALAPAN
-   INVENTORY PAGE JAVASCRIPT
-   Dashboard-Matched Functionality
-========================================================= */
 
-document.addEventListener("DOMContentLoaded", function () {
+"use strict";
 
-    // ==================================================
-    // 1. ELEMENTS
-    // ==================================================
-
+document.addEventListener("DOMContentLoaded", () => {
+    const $ = id => document.getElementById(id);
     const body = document.body;
+    const ARCHIVE_KEY = "printifyArchivedInventory";
 
-    const sidebar = document.getElementById("sidebar");
-    const sidebarOverlay = document.getElementById("sidebarOverlay");
-    const menuToggle = document.getElementById("menuToggle");
-
-    const themeToggle = document.getElementById("themeToggle");
-    const themeIcon = document.getElementById("themeIcon");
-
-    const profileButton = document.getElementById("profileButton");
-    const profileDropdown = document.getElementById("profileDropdown");
-    const logoutButton = document.getElementById("logoutButton");
-
-    const notificationButton = document.getElementById("notificationButton");
-
-    const currentDate = document.getElementById("currentDate");
-    const currentYear = document.getElementById("currentYear");
-
-    const totalProducts = document.getElementById("totalProducts");
-    const inStockProducts = document.getElementById("inStockProducts");
-    const lowStockProducts = document.getElementById("lowStockProducts");
-    const outOfStockProducts = document.getElementById("outOfStockProducts");
-
-    const searchInput = document.getElementById("searchInput");
-    const categoryFilter = document.getElementById("categoryFilter");
-    const stockFilter = document.getElementById("stockFilter");
-
-    const inventoryTableBody = document.getElementById("inventoryTableBody");
-    const resultsCount = document.getElementById("resultsCount");
-
-    const addProductButton = document.getElementById("addProductButton");
-    const productModal = document.getElementById("productModal");
-    const closeModalButton = document.getElementById("closeModalButton");
-    const cancelModalButton = document.getElementById("cancelModalButton");
-    const productForm = document.getElementById("productForm");
-
-    const modalTitle = document.getElementById("modalTitle");
-
-    const productIdInput = document.getElementById("productId");
-    const productNameInput = document.getElementById("productName");
-    const productCategoryInput = document.getElementById("productCategory");
-    const productQuantityInput = document.getElementById("productQuantity");
-    const productUnitInput = document.getElementById("productUnit");
-    const productPriceInput = document.getElementById("productPrice");
-    const lowStockThresholdInput = document.getElementById("lowStockThreshold");
-
-    const resetFiltersButton = document.getElementById("resetFiltersButton");
-
-    const toastMessage = document.getElementById("toastMessage");
-    const toastText = document.getElementById("toastText");
-
-    const mobileScreen = window.matchMedia("(max-width: 850px)");
-
+    let products = [];
+    let archivedProducts = [];
+    let showingArchived = false;
+    let formSnapshot = "";
+    let confirmCallback = null;
     let toastTimer;
 
-
-    // ==================================================
-    // 2. DATE AND YEAR
-    // ==================================================
-
-    function updateDate() {
-
-        if (!currentDate) return;
-
-        const dateText = currentDate.querySelector("span");
-
-        if (dateText) {
-            dateText.textContent = new Date().toLocaleDateString("en-PH", {
-                weekday: "short",
-                year: "numeric",
-                month: "short",
-                day: "numeric"
-            });
-        }
-
-    }
-
-    if (currentYear) {
-        currentYear.textContent = new Date().getFullYear();
-    }
-
-    updateDate();
-
-
-    // ==================================================
-    // 3. SIDEBAR SHOW AND HIDE
-    // Same behavior as Dashboard
-    // ==================================================
-
-    function saveSidebarState(isHidden) {
-
-        try {
-
-            localStorage.setItem(
-                "printify-sidebar-hidden",
-                String(isHidden)
-            );
-
-        } catch (error) {
-
-            console.warn("Unable to save sidebar preference.");
-
-        }
-
-    }
-
-
-    function closeMobileSidebar() {
-
-        if (!sidebar) return;
-
-        sidebar.classList.add("is-hidden");
-
-        if (sidebarOverlay) {
-            sidebarOverlay.classList.remove("show");
-        }
-
-        body.classList.remove("mobile-sidebar-open");
-
-        if (menuToggle) {
-            menuToggle.setAttribute("aria-expanded", "false");
-        }
-
-    }
-
-
-    function openMobileSidebar() {
-
-        if (!sidebar) return;
-
-        sidebar.classList.remove("is-hidden");
-
-        if (sidebarOverlay) {
-            sidebarOverlay.classList.add("show");
-        }
-
-        body.classList.add("mobile-sidebar-open");
-
-        if (menuToggle) {
-            menuToggle.setAttribute("aria-expanded", "true");
-        }
-
-    }
-
-
-    function updateDesktopSidebar() {
-
-        if (!sidebar) return;
-
-        let isHidden = true;
-
-        try {
-
-            const savedState = localStorage.getItem(
-                "printify-sidebar-hidden"
-            );
-
-            if (savedState === null) {
-
-                isHidden = true;
-                saveSidebarState(true);
-
-            } else {
-
-                isHidden = savedState === "true";
-
-            }
-
-        } catch (error) {
-
-            isHidden = true;
-
-        }
-
-        sidebar.classList.toggle("is-hidden", isHidden);
-
-        body.classList.toggle("sidebar-hidden", isHidden);
-
-        if (sidebarOverlay) {
-            sidebarOverlay.classList.remove("show");
-        }
-
-        body.classList.remove("mobile-sidebar-open");
-
-        if (menuToggle) {
-            menuToggle.setAttribute(
-                "aria-expanded",
-                String(!isHidden)
-            );
-        }
-
-    }
-
-
-    function updateSidebarForScreen() {
-
-        if (!sidebar) return;
-
-        if (mobileScreen.matches) {
-
-            sidebar.classList.add("is-hidden");
-
-            if (sidebarOverlay) {
-                sidebarOverlay.classList.remove("show");
-            }
-
-            body.classList.remove("mobile-sidebar-open");
-
-            if (menuToggle) {
-                menuToggle.setAttribute("aria-expanded", "false");
-            }
-
-        } else {
-
-            updateDesktopSidebar();
-
-        }
-
-    }
-
-
-    if (menuToggle) {
-
-        menuToggle.addEventListener("click", function () {
-
-            if (!sidebar) return;
-
-            if (mobileScreen.matches) {
-
-                const isOpen = !sidebar.classList.contains("is-hidden");
-
-                if (isOpen) {
-                    closeMobileSidebar();
-                } else {
-                    openMobileSidebar();
-                }
-
-            } else {
-
-                const isHidden = sidebar.classList.toggle("is-hidden");
-
-                body.classList.toggle("sidebar-hidden", isHidden);
-
-                saveSidebarState(isHidden);
-
-                menuToggle.setAttribute(
-                    "aria-expanded",
-                    String(!isHidden)
-                );
-
-            }
-
-        });
-
-    }
-
-
-    if (sidebarOverlay) {
-
-        sidebarOverlay.addEventListener("click", function () {
-            closeMobileSidebar();
-        });
-
-    }
-
-
-    if (sidebar) {
-
-        sidebar.querySelectorAll(".nav-link").forEach(function (link) {
-
-            link.addEventListener("click", function () {
-
-                if (mobileScreen.matches) {
-                    closeMobileSidebar();
-                }
-
-            });
-
-        });
-
-    }
-
-
-    if (typeof mobileScreen.addEventListener === "function") {
-
-        mobileScreen.addEventListener("change", updateSidebarForScreen);
-
-    } else {
-
-        mobileScreen.addListener(updateSidebarForScreen);
-
-    }
-
-    updateSidebarForScreen();
-
-
-    // ==================================================
-    // 4. LIGHT MODE AND DARK MODE
-    // Same storage key and icons as Dashboard
-    // ==================================================
-
-    function updateThemeIcon(isDark) {
-
-        if (!themeIcon) return;
-
-        themeIcon.src = isDark
-            ? "image/lightmode_icon.png"
-            : "image/nightmode_icon.png";
-
-        themeIcon.alt = isDark
-            ? "Switch to light mode"
-            : "Switch to dark mode";
-
-        themeIcon.classList.add("theme-image-icon");
-
-    }
-
-
-    function applyTheme(theme) {
-
-        const isDark = theme === "dark";
-
-        body.classList.toggle("dark-mode", isDark);
-
-        updateThemeIcon(isDark);
-
-        if (themeToggle) {
-
-            const label = isDark
-                ? "Switch to light mode"
-                : "Switch to dark mode";
-
-            themeToggle.setAttribute("aria-label", label);
-            themeToggle.setAttribute("title", label);
-
-        }
-
-    }
-
-
-    let savedTheme = "light";
-
-    try {
-
-        savedTheme = localStorage.getItem("printify-theme") || "light";
-
-    } catch (error) {
-
-        console.warn("Unable to load saved theme.");
-
-    }
-
-    applyTheme(savedTheme);
-
-
-    if (themeToggle) {
-
-        themeToggle.addEventListener("click", function () {
-
-            const currentTheme = body.classList.contains("dark-mode")
-                ? "dark"
-                : "light";
-
-            const newTheme = currentTheme === "dark"
-                ? "light"
-                : "dark";
-
-            applyTheme(newTheme);
-
-            try {
-
-                localStorage.setItem("printify-theme", newTheme);
-
-            } catch (error) {
-
-                console.warn("Unable to save theme.");
-
-            }
-
-        });
-
-    }
-
-
-    // ==================================================
-    // 5. PROFILE DROPDOWN
-    // ==================================================
-
-    if (profileButton && profileDropdown) {
-
-        profileButton.addEventListener("click", function (event) {
-
-            event.stopPropagation();
-
-            const isOpen = profileDropdown.classList.toggle("show");
-
-            profileButton.setAttribute(
-                "aria-expanded",
-                String(isOpen)
-            );
-
-        });
-
-
-        profileDropdown.addEventListener("click", function (event) {
-            event.stopPropagation();
-        });
-
-
-        document.addEventListener("click", function () {
-
-            profileDropdown.classList.remove("show");
-
-            profileButton.setAttribute("aria-expanded", "false");
-
-        });
-
-
-        document.addEventListener("keydown", function (event) {
-
-            if (event.key === "Escape") {
-
-                profileDropdown.classList.remove("show");
-
-                profileButton.setAttribute("aria-expanded", "false");
-
-            }
-
-        });
-
-    }
-
-
-    // ==================================================
-    // 6. ACTIVE SIDEBAR LINK
-    // ==================================================
-
-    if (sidebar) {
-
-        const currentPage = window.location.pathname
-            .split("/")
-            .pop()
-            .toLowerCase();
-
-        sidebar.querySelectorAll(".nav-link").forEach(function (link) {
-
-            const href = link.getAttribute("href");
-
-            if (!href) return;
-
-            const linkPage = href
-                .split("/")
-                .pop()
-                .toLowerCase();
-
-            link.classList.toggle(
-                "active",
-                linkPage === currentPage
-            );
-
-        });
-
-    }
-
-
-    // ==================================================
-    // 7. LOGOUT
-    // ==================================================
-
-    if (logoutButton) {
-
-        logoutButton.addEventListener("click", function () {
-
-            const confirmLogout = confirm(
-                "Are you sure you want to log out?"
-            );
-
-            if (confirmLogout) {
-
-                (window.PrintifyAPI ? PrintifyAPI.logout() : (window.location.href = "login.html"));
-
-            }
-
-        });
-
-    }
-
-
-    // ==================================================
-    // 8. SAMPLE INVENTORY
-    // ==================================================
-
-    // Inventory is stored in PostgreSQL through /api/inventory (see auth-guard.js).
-
-
-    // ==================================================
-    // 9. LOAD AND SAVE PRODUCTS
-    // ==================================================
-
-    function loadProducts() {
-
-        const items = window.PrintifyAPI ? window.PrintifyAPI.fetchInventory() : null;
-
-        if (!Array.isArray(items)) {
-            console.error("Unable to load inventory from the server.");
-            return [];
-        }
-
-        return items;
-
-    }
-
-
-    let products = loadProducts();
-
-
-    // Saves the changes to PostgreSQL. Returns true on success.
-    function saveProducts() {
-
-        if (!window.PrintifyAPI) {
-            showToast("Unable to reach the server.", "error");
-            return false;
-        }
-
-        const result = window.PrintifyAPI.syncInventory(products);
-        const fresh = window.PrintifyAPI.fetchInventory();
-
-        if (Array.isArray(fresh)) {
-            products = fresh;
-        }
-
-        if (!result.ok) {
-            showToast(result.message || "Unable to save changes.", "error");
-            return false;
-        }
-
-        return true;
-
-    }
-
-
-    // ==================================================
-    // 10. HELPER FUNCTIONS
-    // ==================================================
+    // ========================================
+    // HELPERS
+    // ========================================
 
     function escapeHTML(value) {
-
-        return String(value).replace(/[&<>"']/g, function (character) {
-
-            const replacements = {
-                "&": "&amp;",
-                "<": "&lt;",
-                ">": "&gt;",
-                '"': "&quot;",
-                "'": "&#39;"
-            };
-
-            return replacements[character];
-
-        });
-
+        return String(value ?? "").replace(/[&<>"']/g, c => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        })[c]);
     }
 
-
-    function formatCurrency(value) {
-
-        return Number(value).toLocaleString("en-PH", {
+    function money(value) {
+        return Number(value || 0).toLocaleString("en-PH", {
             style: "currency",
-            currency: "PHP",
-            minimumFractionDigits: 2
+            currency: "PHP"
         });
-
     }
 
+    function statusOf(product) {
+        const quantity = Number(product.quantity);
+        const threshold = Number(product.threshold);
 
-    function getStockStatus(product) {
-
-        if (Number(product.quantity) === 0) {
-            return "Out of Stock";
-        }
-
-        if (Number(product.quantity) <= Number(product.threshold)) {
-            return "Low Stock";
-        }
-
+        if (quantity <= 0) return "Out of Stock";
+        if (quantity <= threshold) return "Low Stock";
         return "In Stock";
-
     }
 
-
-    function getProductIcon(category) {
-
-        switch (category) {
-
-            case "Paper":
-                return "fa-file-lines";
-
-            case "Ink":
-                return "fa-droplet";
-
-            case "Printing Supplies":
-                return "fa-print";
-
-            default:
-                return "fa-box";
-
-        }
-
+    function statusClass(status) {
+        return status.toLowerCase().replaceAll(" ", "-");
     }
 
+    function iconOf(category) {
+        return ({
+            Paper: "fa-file-lines",
+            Ink: "fa-droplet",
+            "Printing Supplies": "fa-print",
+            Other: "fa-box"
+        })[category] || "fa-box";
+    }
 
-    function showToast(message, type = "success") {
-
-        if (!toastMessage || !toastText) return;
+    function toast(message, error = false) {
+        const box = $("toastMessage");
+        if (!box) return;
 
         clearTimeout(toastTimer);
+        $("toastText").textContent = message;
 
-        toastText.textContent = message;
+        box.style.color = error ? "#ff9999" : "#8aff98";
+        box.style.borderColor = error
+            ? "rgba(255,80,80,.5)"
+            : "rgba(25,229,27,.4)";
 
-        const icon = toastMessage.querySelector("i");
+        box.classList.add("show");
 
-        if (icon) {
-
-            if (type === "error") {
-
-                icon.className = "fa-solid fa-circle-exclamation";
-                toastMessage.style.borderLeftColor = "#ff6262";
-                toastMessage.style.color = "#ff8585";
-
-            } else {
-
-                icon.className = "fa-solid fa-circle-check";
-                toastMessage.style.borderLeftColor = "#19e51b";
-                toastMessage.style.color = "#25d366";
-
-            }
-
-        }
-
-        toastMessage.classList.add("show");
-
-        toastTimer = setTimeout(function () {
-
-            toastMessage.classList.remove("show");
-
-        }, 3000);
-
+        toastTimer = setTimeout(() => {
+            box.classList.remove("show");
+        }, 3200);
     }
 
+    function nextId() {
+        const ids = [...products, ...archivedProducts]
+            .map(p => /^PRD-(\d+)$/.exec(String(p.id)))
+            .filter(Boolean)
+            .map(match => Number(match[1]));
 
-    function generateProductId() {
-
-        let highestNumber = 0;
-
-        products.forEach(function (product) {
-
-            const match = String(product.id).match(/^PRD-(\d+)$/);
-
-            if (match) {
-
-                highestNumber = Math.max(
-                    highestNumber,
-                    Number(match[1])
-                );
-
-            }
-
-        });
-
-        return "PRD-" + String(highestNumber + 1).padStart(3, "0");
-
+        const next = Math.max(0, ...ids) + 1;
+        return "PRD-" + String(next).padStart(3, "0");
     }
 
+    // ========================================
+    // EXISTING PRINTIFY API
+    // ========================================
 
-    // ==================================================
-    // 11. STOCK SUMMARY
-    // ==================================================
-
-    function updateSummary() {
-
-        let inStock = 0;
-        let lowStock = 0;
-        let outOfStock = 0;
-
-        products.forEach(function (product) {
-
-            const status = getStockStatus(product);
-
-            if (status === "In Stock") {
-
-                inStock++;
-
-            } else if (status === "Low Stock") {
-
-                lowStock++;
-
-            } else {
-
-                outOfStock++;
-
-            }
-
-        });
-
-        if (totalProducts) {
-            totalProducts.textContent = products.length;
-        }
-
-        if (inStockProducts) {
-            inStockProducts.textContent = inStock;
-        }
-
-        if (lowStockProducts) {
-            lowStockProducts.textContent = lowStock;
-        }
-
-        if (outOfStockProducts) {
-            outOfStockProducts.textContent = outOfStock;
-        }
-
-    }
-
-
-    // ==================================================
-    // 12. DISPLAY INVENTORY
-    // ==================================================
-
-    function renderProducts() {
-
-        if (!inventoryTableBody) return;
-
-        const searchTerm = searchInput
-            ? searchInput.value.trim().toLowerCase()
-            : "";
-
-        const selectedCategory = categoryFilter
-            ? categoryFilter.value
-            : "all";
-
-        const selectedStock = stockFilter
-            ? stockFilter.value
-            : "all";
-
-
-        const filteredProducts = products.filter(function (product) {
-
-            const matchesSearch =
-                String(product.name).toLowerCase().includes(searchTerm) ||
-                String(product.id).toLowerCase().includes(searchTerm);
-
-            const matchesCategory =
-                selectedCategory === "all" ||
-                product.category === selectedCategory;
-
-            const matchesStock =
-                selectedStock === "all" ||
-                getStockStatus(product) === selectedStock;
-
-            return matchesSearch && matchesCategory && matchesStock;
-
-        });
-
-
-        if (filteredProducts.length === 0) {
-
-            inventoryTableBody.innerHTML = `
-                <tr>
-                    <td colspan="6" class="empty-inventory">
-                        <i class="fa-solid fa-box-open"></i>
-                        <strong>No products found</strong>
-                        <p>Try changing your search or filters.</p>
-                    </td>
-                </tr>
-            `;
-
-            if (resultsCount) {
-                resultsCount.textContent = "Showing 0 products";
-            }
-
+    function loadInventory() {
+        if (!window.PrintifyAPI ||
+            typeof PrintifyAPI.fetchInventory !== "function") {
+            toast("Printify API is unavailable.", true);
             return;
-
         }
 
+        try {
+            const result = PrintifyAPI.fetchInventory();
 
-        inventoryTableBody.innerHTML = filteredProducts.map(function (product) {
-
-            const status = getStockStatus(product);
-
-            let statusClass = "in-stock";
-
-            if (status === "Low Stock") {
-
-                statusClass = "low-stock";
-
-            } else if (status === "Out of Stock") {
-
-                statusClass = "out-of-stock";
-
+            if (!Array.isArray(result)) {
+                throw new Error("Invalid inventory API response.");
             }
 
+            products = result;
+        } catch (error) {
+            console.error(error);
+            toast("Unable to load inventory.", true);
+        }
+    }
 
-            return `
-                <tr>
-
-                    <td>
-                        <div class="inventory-product">
-
-                            <div class="inventory-product-icon">
-                                <i class="fa-solid ${getProductIcon(product.category)}"></i>
-                            </div>
-
-                            <div class="inventory-product-details">
-                                <strong>${escapeHTML(product.name)}</strong>
-                                <span>${escapeHTML(product.id)}</span>
-                            </div>
-
-                        </div>
-                    </td>
-
-                    <td>
-                        <span class="category-label">
-                            ${escapeHTML(product.category)}
-                        </span>
-                    </td>
-
-                    <td>
-                        <span class="quantity-value">
-                            ${Number(product.quantity)}
-                        </span>
-
-                        <span class="unit-label">
-                            ${escapeHTML(product.unit)}
-                        </span>
-                    </td>
-
-                    <td>
-                        <span class="price-value">
-                            ${formatCurrency(product.price)}
-                        </span>
-                    </td>
-
-                    <td>
-                        <span class="inventory-status ${statusClass}">
-                            ${status}
-                        </span>
-                    </td>
-
-                    <td>
-                        <div class="inventory-actions">
-
-                            <button
-                                type="button"
-                                class="action-button edit-button"
-                                data-action="edit"
-                                data-id="${escapeHTML(product.id)}"
-                                title="Edit product"
-                                aria-label="Edit ${escapeHTML(product.name)}"
-                            >
-                                <i class="fa-solid fa-pen"></i>
-                            </button>
-
-                            <button
-                                type="button"
-                                class="action-button delete-button"
-                                data-action="delete"
-                                data-id="${escapeHTML(product.id)}"
-                                title="Delete product"
-                                aria-label="Delete ${escapeHTML(product.name)}"
-                            >
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-
-                        </div>
-                    </td>
-
-                </tr>
-            `;
-
-        }).join("");
-
-
-        if (resultsCount) {
-
-            resultsCount.textContent =
-                "Showing " + filteredProducts.length +
-                " of " + products.length + " products";
-
+    function saveInventory(items) {
+        if (!window.PrintifyAPI ||
+            typeof PrintifyAPI.syncInventory !== "function") {
+            toast("Database API is unavailable.", true);
+            return false;
         }
 
-    }
+        try {
+            const result = PrintifyAPI.syncInventory(items);
 
-
-    function refreshInventory() {
-
-        updateSummary();
-        renderProducts();
-
-    }
-
-
-    // ==================================================
-    // 13. OPEN ADD PRODUCT MODAL
-    // ==================================================
-
-    function openAddProductModal() {
-
-        if (!productForm || !productModal) return;
-
-        productForm.reset();
-
-        productIdInput.value = "";
-        lowStockThresholdInput.value = "10";
-
-        modalTitle.textContent = "Add Product";
-
-        productModal.classList.add("show");
-        productModal.setAttribute("aria-hidden", "false");
-
-        body.style.overflow = "hidden";
-
-        setTimeout(function () {
-
-            if (productNameInput) {
-                productNameInput.focus();
+            if (!result?.ok) {
+                throw new Error(result?.message || "Save failed.");
             }
 
-        }, 150);
-
+            const refreshed = PrintifyAPI.fetchInventory();
+            products = Array.isArray(refreshed) ? refreshed : items;
+            return true;
+        } catch (error) {
+            console.error(error);
+            toast(error.message || "Database save failed.", true);
+            return false;
+        }
     }
 
-
-    // ==================================================
-    // 14. OPEN EDIT PRODUCT MODAL
-    // ==================================================
-
-    function openEditProductModal(productId) {
-
-        const product = products.find(function (item) {
-            return item.id === productId;
-        });
-
-        if (!product) {
-
-            showToast("Product not found.", "error");
-            return;
-
+    function loadArchives() {
+        try {
+            const value = JSON.parse(
+                localStorage.getItem(ARCHIVE_KEY) || "[]"
+            );
+            archivedProducts = Array.isArray(value) ? value : [];
+        } catch {
+            archivedProducts = [];
         }
-
-        productIdInput.value = product.id;
-        productNameInput.value = product.name;
-        productCategoryInput.value = product.category;
-        productQuantityInput.value = product.quantity;
-        productUnitInput.value = product.unit;
-        productPriceInput.value = product.price;
-        lowStockThresholdInput.value = product.threshold;
-
-        modalTitle.textContent = "Edit Product";
-
-        productModal.classList.add("show");
-        productModal.setAttribute("aria-hidden", "false");
-
-        body.style.overflow = "hidden";
-
-        setTimeout(function () {
-
-            productNameInput.focus();
-
-        }, 150);
-
     }
 
-
-    // ==================================================
-    // 15. CLOSE PRODUCT MODAL
-    // ==================================================
-
-    function closeProductModal() {
-
-        if (!productModal) return;
-
-        productModal.classList.remove("show");
-        productModal.setAttribute("aria-hidden", "true");
-
-        body.style.overflow = "";
-
-        if (productForm) {
-            productForm.reset();
+    function saveArchives(items) {
+        try {
+            localStorage.setItem(ARCHIVE_KEY, JSON.stringify(items));
+            archivedProducts = items;
+            return true;
+        } catch {
+            toast("Unable to save archive.", true);
+            return false;
         }
-
-        if (productIdInput) {
-            productIdInput.value = "";
-        }
-
     }
 
+    // ========================================
+    // MODAL SYSTEM WITH BLURRED BACKGROUND
+    // ========================================
 
-    // ==================================================
-    // 16. SAVE PRODUCT
-    // ==================================================
+    const MODAL_IDS = [
+        "productModal",
+        "viewProductModal",
+        "confirmationModal"
+    ];
 
-    if (productForm) {
+    function openModal(id) {
+        const modal = $(id);
+        if (!modal) return;
 
-        productForm.addEventListener("submit", function (event) {
+        modal.classList.add("show");
+        modal.setAttribute("aria-hidden", "false");
 
-            event.preventDefault();
+        body.classList.add("inventory-modal-open");
 
-            if (!productForm.reportValidity()) {
-                return;
-            }
+        // Confirmation appears above the Add/Edit form.
+        modal.style.zIndex =
+            id === "confirmationModal" ? "100002" : "100001";
+    }
 
-            const existingId = productIdInput.value;
+    function closeModal(id) {
+        const modal = $(id);
+        if (!modal) return;
 
-            const name = productNameInput.value.trim();
-            const category = productCategoryInput.value;
-            const quantity = Number(productQuantityInput.value);
-            const unit = productUnitInput.value;
-            const price = Number(productPriceInput.value);
-            const threshold = Number(lowStockThresholdInput.value);
+        modal.classList.remove("show");
+        modal.setAttribute("aria-hidden", "true");
 
+        const stillOpen = MODAL_IDS.some(
+            modalId => $(modalId)?.classList.contains("show")
+        );
 
-            if (
-                !name ||
-                !category ||
-                !unit ||
-                !Number.isInteger(quantity) ||
-                quantity < 0 ||
-                !Number.isFinite(price) ||
-                price < 0 ||
-                !Number.isInteger(threshold) ||
-                threshold < 0
-            ) {
+        if (!stillOpen) {
+            body.classList.remove("inventory-modal-open");
+        }
+    }
 
-                showToast(
-                    "Please enter valid product details.",
-                    "error"
-                );
-
-                return;
-
-            }
-
-
-            const duplicateName = products.some(function (product) {
-
-                return (
-                    product.name.toLowerCase() === name.toLowerCase() &&
-                    product.id !== existingId
-                );
-
+    // Clicking the blurred background does nothing.
+    // Only the actual Close/Cancel buttons can close a modal.
+    document.querySelectorAll(".inventory-modal-overlay")
+        .forEach(overlay => {
+            overlay.addEventListener("click", event => {
+                if (event.target === overlay) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
             });
-
-
-            if (duplicateName) {
-
-                showToast(
-                    "A product with that name already exists.",
-                    "error"
-                );
-
-                return;
-
-            }
-
-
-            // UPDATE EXISTING PRODUCT
-
-            if (existingId) {
-
-                const productIndex = products.findIndex(function (product) {
-                    return product.id === existingId;
-                });
-
-                if (productIndex === -1) {
-
-                    showToast(
-                        "Unable to find product to update.",
-                        "error"
-                    );
-
-                    return;
-
-                }
-
-                products[productIndex] = {
-
-                    ...products[productIndex],
-
-                    name: name,
-                    category: category,
-                    quantity: quantity,
-                    unit: unit,
-                    price: price,
-                    threshold: threshold
-
-                };
-
-                if (!saveProducts()) {
-
-                    refreshInventory();
-
-                    return;
-
-                }
-
-                refreshInventory();
-                closeProductModal();
-
-                showToast("Product updated successfully.");
-
-            } else {
-
-                // ADD NEW PRODUCT
-
-                const newProduct = {
-
-                    id: generateProductId(),
-                    name: name,
-                    category: category,
-                    quantity: quantity,
-                    unit: unit,
-                    price: price,
-                    threshold: threshold
-
-                };
-
-                products.push(newProduct);
-
-                if (!saveProducts()) {
-
-                    refreshInventory();
-
-                    return;
-
-                }
-
-                refreshInventory();
-                closeProductModal();
-
-                showToast("Product added successfully.");
-
-            }
-
         });
 
+    // ========================================
+    // CONFIRMATION POPUP
+    // ========================================
+
+    function confirmAction(
+        title,
+        message,
+        callback,
+        buttonLabel = "Confirm"
+    ) {
+        confirmCallback = callback;
+
+        $("confirmationTitle").textContent = title;
+        $("confirmationMessage").textContent = message;
+        $("confirmActionButton").textContent = buttonLabel;
+
+        openModal("confirmationModal");
     }
 
-
-    // ==================================================
-    // 17. EDIT AND DELETE PRODUCT
-    // ==================================================
-
-    if (inventoryTableBody) {
-
-        inventoryTableBody.addEventListener("click", function (event) {
-
-            const button = event.target.closest("button[data-action]");
-
-            if (!button) return;
-
-            const action = button.dataset.action;
-            const productId = button.dataset.id;
-
-
-            if (action === "edit") {
-
-                openEditProductModal(productId);
-                return;
-
-            }
-
-
-            if (action === "delete") {
-
-                const product = products.find(function (item) {
-                    return item.id === productId;
-                });
-
-                if (!product) {
-
-                    showToast("Product not found.", "error");
-                    return;
-
-                }
-
-                const confirmed = confirm(
-                    "Are you sure you want to delete \"" +
-                    product.name +
-                    "\" (" + product.id + ")?"
-                );
-
-                if (!confirmed) return;
-
-
-                products = products.filter(function (item) {
-                    return item.id !== productId;
-                });
-
-                if (!saveProducts()) {
-
-                    refreshInventory();
-
-                    return;
-
-                }
-
-                refreshInventory();
-
-                showToast("Product deleted successfully.");
-
-            }
-
-        });
-
-    }
-
-
-    // ==================================================
-    // 18. SEARCH AND FILTERS
-    // ==================================================
-
-    if (searchInput) {
-        searchInput.addEventListener("input", renderProducts);
-    }
-
-    if (categoryFilter) {
-        categoryFilter.addEventListener("change", renderProducts);
-    }
-
-    if (stockFilter) {
-        stockFilter.addEventListener("change", renderProducts);
-    }
-
-
-    if (resetFiltersButton) {
-
-        resetFiltersButton.addEventListener("click", function () {
-
-            if (searchInput) {
-                searchInput.value = "";
-            }
-
-            if (categoryFilter) {
-                categoryFilter.value = "all";
-            }
-
-            if (stockFilter) {
-                stockFilter.value = "all";
-            }
-
-            renderProducts();
-
-            showToast("Filters have been reset.");
-
-        });
-
-    }
-
-
-    // ==================================================
-    // 19. MODAL BUTTONS
-    // ==================================================
-
-    if (addProductButton) {
-        addProductButton.addEventListener("click", openAddProductModal);
-    }
-
-    if (closeModalButton) {
-        closeModalButton.addEventListener("click", closeProductModal);
-    }
-
-    if (cancelModalButton) {
-        cancelModalButton.addEventListener("click", closeProductModal);
-    }
-
-
-    if (productModal) {
-
-        productModal.addEventListener("click", function (event) {
-
-            if (event.target === productModal) {
-                closeProductModal();
-            }
-
-        });
-
-    }
-
-
-    document.addEventListener("keydown", function (event) {
-
-        if (
-            event.key === "Escape" &&
-            productModal &&
-            productModal.classList.contains("show")
-        ) {
-
-            closeProductModal();
-
-        }
-
+    $("cancelConfirmationButton").addEventListener("click", () => {
+        confirmCallback = null;
+        closeModal("confirmationModal");
     });
 
+    $("confirmActionButton").addEventListener("click", () => {
+        const callback = confirmCallback;
+        confirmCallback = null;
 
-    // ==================================================
-    // 20. NOTIFICATIONS
-    // ==================================================
+        closeModal("confirmationModal");
 
-    if (notificationButton) {
+        if (typeof callback === "function") callback();
+    });
 
-        notificationButton.addEventListener("click", function () {
+    // ========================================
+    // PROTECT UNSAVED FORM DATA
+    // ========================================
 
-            const lowStockCount = products.filter(function (product) {
+    function formValues() {
+        return [
+            "productId",
+            "productName",
+            "productCategory",
+            "productQuantity",
+            "productUnit",
+            "productPrice",
+            "lowStockThreshold"
+        ].map(id => $(id)?.value ?? "");
+    }
 
-                return getStockStatus(product) !== "In Stock";
+    function takeSnapshot() {
+        formSnapshot = JSON.stringify(formValues());
+    }
 
-            }).length;
+    function hasUnsavedChanges() {
+        return JSON.stringify(formValues()) !== formSnapshot;
+    }
 
+    function requestCloseProduct() {
+        if (!hasUnsavedChanges()) {
+            closeModal("productModal");
+            return;
+        }
 
-            if (lowStockCount > 0) {
+        confirmAction(
+            "Discard Changes?",
+            "You have unsaved product information. Are you sure you want to discard it?",
+            () => closeModal("productModal"),
+            "Discard Changes"
+        );
+    }
 
-                showToast(
-                    lowStockCount +
-                    " product(s) need stock attention."
+    // ========================================
+    // ADD PRODUCT
+    // ========================================
+
+    function openAddProduct() {
+        $("productForm").reset();
+        $("productId").value = "";
+        $("lowStockThreshold").value = "10";
+
+        $("modalTitle").textContent = "Add Product";
+        $("modalDescription").textContent =
+            "Enter the details of the printing material.";
+
+        $("saveProductButton").innerHTML =
+            '<i class="fa-solid fa-floppy-disk"></i> Save Product';
+
+        takeSnapshot();
+        openModal("productModal");
+        $("productName").focus();
+    }
+
+    // ========================================
+    // EDIT PRODUCT
+    // ========================================
+
+    function openEditProduct(id) {
+        const product = products.find(p => String(p.id) === String(id));
+
+        if (!product) {
+            toast("Product not found.", true);
+            return;
+        }
+
+        $("productId").value = product.id;
+        $("productName").value = product.name;
+        $("productCategory").value = product.category;
+        $("productQuantity").value = product.quantity;
+        $("productUnit").value = product.unit;
+        $("productPrice").value = product.price;
+        $("lowStockThreshold").value = product.threshold;
+
+        $("modalTitle").textContent = "Edit Product";
+        $("modalDescription").textContent =
+            "Update the details of this inventory product.";
+
+        $("saveProductButton").innerHTML =
+            '<i class="fa-solid fa-floppy-disk"></i> Update Product';
+
+        takeSnapshot();
+        openModal("productModal");
+    }
+
+    $("addProductButton").addEventListener("click", openAddProduct);
+    $("closeModalButton").addEventListener("click", requestCloseProduct);
+    $("cancelModalButton").addEventListener("click", requestCloseProduct);
+
+    // ========================================
+    // SAVE ADD / EDIT PRODUCT
+    // ========================================
+
+    $("productForm").addEventListener("submit", event => {
+        event.preventDefault();
+
+        const form = $("productForm");
+        if (!form.reportValidity()) return;
+
+        const id = $("productId").value;
+        const name = $("productName").value.trim();
+        const category = $("productCategory").value;
+        const quantity = Number($("productQuantity").value);
+        const unit = $("productUnit").value;
+        const price = Number($("productPrice").value);
+        const threshold = Number($("lowStockThreshold").value);
+
+        if (!name || !category || !unit ||
+            !Number.isInteger(quantity) || quantity < 0 ||
+            !Number.isFinite(price) || price < 0 ||
+            !Number.isInteger(threshold) || threshold < 0) {
+            toast("Please enter valid product details.", true);
+            return;
+        }
+
+        const duplicate = products.some(p =>
+            String(p.name).toLowerCase() === name.toLowerCase() &&
+            String(p.id) !== String(id)
+        );
+
+        if (duplicate) {
+            toast("Product name already exists.", true);
+            return;
+        }
+
+        const product = {
+            id: id || nextId(),
+            name,
+            category,
+            quantity,
+            unit,
+            price,
+            threshold
+        };
+
+        const updated = id
+            ? products.map(p =>
+                String(p.id) === String(id)
+                    ? { ...p, ...product }
+                    : p
+              )
+            : [...products, product];
+
+        const saveButton = $("saveProductButton");
+        saveButton.disabled = true;
+
+        try {
+            if (!saveInventory(updated)) return;
+
+            closeModal("productModal");
+            renderInventory();
+
+            toast(id
+                ? "Product updated successfully."
+                : "Product added successfully.");
+        } finally {
+            saveButton.disabled = false;
+        }
+    });
+
+    // ========================================
+    // VIEW PRODUCT
+    // ========================================
+
+    function openViewProduct(id, archived = false) {
+        const source = archived ? archivedProducts : products;
+        const product = source.find(p => String(p.id) === String(id));
+
+        if (!product) {
+            toast("Product not found.", true);
+            return;
+        }
+
+        const details = [
+            ["Product ID", product.id],
+            ["Product Name", product.name],
+            ["Category", product.category],
+            ["Quantity", `${product.quantity} ${product.unit}`],
+            ["Unit Price", money(product.price)],
+            ["Low Stock Threshold", product.threshold],
+            ["Stock Status", statusOf(product)]
+        ];
+
+        if (archived) {
+            details.push([
+                "Archived Date",
+                product.archivedAt
+                    ? new Date(product.archivedAt).toLocaleString("en-PH")
+                    : "N/A"
+            ]);
+        }
+
+        $("productDetailsContent").innerHTML = details.map(
+            ([label, value]) => `
+                <div class="product-detail-item">
+                    <span>${escapeHTML(label)}</span>
+                    <strong>${escapeHTML(value)}</strong>
+                </div>
+            `
+        ).join("");
+
+        openModal("viewProductModal");
+    }
+
+    $("closeViewModalButton").addEventListener("click", () => {
+        closeModal("viewProductModal");
+    });
+
+    $("closeViewButton").addEventListener("click", () => {
+        closeModal("viewProductModal");
+    });
+
+    // ========================================
+    // ARCHIVE PRODUCT
+    // ========================================
+
+    function archiveProduct(id) {
+        const product = products.find(p => String(p.id) === String(id));
+        if (!product) return;
+
+        confirmAction(
+            "Archive Product?",
+            `Are you sure you want to archive "${product.name}"? You can restore it later.`,
+            () => {
+                const oldArchives = [...archivedProducts];
+
+                const nextArchives = [
+                    ...archivedProducts,
+                    {
+                        ...product,
+                        archivedAt: new Date().toISOString()
+                    }
+                ];
+
+                if (!saveArchives(nextArchives)) return;
+
+                const nextProducts = products.filter(
+                    p => String(p.id) !== String(id)
                 );
 
-            } else {
+                if (!saveInventory(nextProducts)) {
+                    saveArchives(oldArchives);
+                    return;
+                }
 
-                showToast(
-                    "All products are sufficiently stocked."
+                renderInventory();
+                toast("Product archived successfully.");
+            },
+            "Archive Product"
+        );
+    }
+
+    // ========================================
+    // RESTORE PRODUCT
+    // ========================================
+
+    function restoreProduct(id) {
+        const product = archivedProducts.find(
+            p => String(p.id) === String(id)
+        );
+
+        if (!product) return;
+
+        confirmAction(
+            "Restore Product?",
+            `Restore "${product.name}" to active inventory?`,
+            () => {
+                if (products.some(p => String(p.id) === String(id))) {
+                    toast("Product ID already exists.", true);
+                    return;
+                }
+
+                const { archivedAt, ...restored } = product;
+
+                if (!saveInventory([...products, restored])) return;
+
+                const remaining = archivedProducts.filter(
+                    p => String(p.id) !== String(id)
                 );
 
-            }
+                if (!saveArchives(remaining)) {
+                    toast("Restored, but archive cleanup failed.", true);
+                    renderInventory();
+                    return;
+                }
 
+                renderInventory();
+                toast("Product restored successfully.");
+            },
+            "Restore Product"
+        );
+    }
+
+    // ========================================
+    // PERMANENT DELETE
+    // ========================================
+
+    function permanentlyDelete(id) {
+        const product = archivedProducts.find(
+            p => String(p.id) === String(id)
+        );
+
+        if (!product) return;
+
+        confirmAction(
+            "Permanently Delete Product?",
+            `Delete "${product.name}" permanently? This cannot be undone.`,
+            () => {
+                const remaining = archivedProducts.filter(
+                    p => String(p.id) !== String(id)
+                );
+
+                if (!saveArchives(remaining)) return;
+
+                renderInventory();
+                toast("Product permanently deleted.");
+            },
+            "Delete Permanently"
+        );
+    }
+
+    // ========================================
+    // FILTERS
+    // ========================================
+
+    function filteredProducts() {
+        const source = showingArchived ? archivedProducts : products;
+
+        const search = $("searchInput").value.trim().toLowerCase();
+        const category = $("categoryFilter").value;
+        const stock = $("stockFilter").value;
+
+        return source.filter(p => {
+            const matchesSearch =
+                String(p.name).toLowerCase().includes(search) ||
+                String(p.id).toLowerCase().includes(search);
+
+            const matchesCategory =
+                category === "all" || p.category === category;
+
+            const matchesStock =
+                stock === "all" || statusOf(p) === stock;
+
+            return matchesSearch && matchesCategory && matchesStock;
         });
-
     }
 
+    // ========================================
+    // PRODUCT TABLE
+    // ========================================
 
-    // ==================================================
-    // 21. ACCESSIBILITY SETTINGS
-    // ==================================================
+    function productCell(p) {
+        return `
+            <div class="inventory-product">
+                <div class="inventory-product-icon">
+                    <i class="fa-solid ${iconOf(p.category)}"></i>
+                </div>
+                <div class="inventory-product-details">
+                    <strong>${escapeHTML(p.name)}</strong>
+                    <small class="product-id">${escapeHTML(p.id)}</small>
+                </div>
+            </div>
+        `;
+    }
 
-    if (menuToggle) {
+    function activeRow(p) {
+        const status = statusOf(p);
 
-        menuToggle.setAttribute(
-            "aria-controls",
-            "sidebar"
+        return `
+            <tr>
+                <td>${productCell(p)}</td>
+                <td>${escapeHTML(p.category)}</td>
+                <td>
+                    <strong>${Number(p.quantity)}</strong>
+                    ${escapeHTML(p.unit)}
+                </td>
+                <td class="price-value">${money(p.price)}</td>
+                <td>
+                    <span class="inventory-status ${statusClass(status)}">
+                        ${status}
+                    </span>
+                </td>
+                <td>
+                    <div class="inventory-actions">
+                        <button type="button"
+                                data-action="view"
+                                data-id="${escapeHTML(p.id)}"
+                                title="View Product">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                        <button type="button"
+                                data-action="edit"
+                                data-id="${escapeHTML(p.id)}"
+                                title="Edit Product">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button type="button"
+                                class="archive-action"
+                                data-action="archive"
+                                data-id="${escapeHTML(p.id)}"
+                                title="Archive Product">
+                            <i class="fa-solid fa-box-archive"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    function archivedRow(p) {
+        const date = p.archivedAt
+            ? new Date(p.archivedAt).toLocaleDateString("en-PH")
+            : "N/A";
+
+        return `
+            <tr>
+                <td>${productCell(p)}</td>
+                <td>${escapeHTML(p.category)}</td>
+                <td>
+                    ${Number(p.quantity)} ${escapeHTML(p.unit)}
+                </td>
+                <td class="price-value">${money(p.price)}</td>
+                <td>${escapeHTML(date)}</td>
+                <td>
+                    <div class="inventory-actions">
+                        <button type="button"
+                                data-action="view"
+                                data-id="${escapeHTML(p.id)}"
+                                title="View Product">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                        <button type="button"
+                                class="restore-action"
+                                data-action="restore"
+                                data-id="${escapeHTML(p.id)}"
+                                title="Restore Product">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </button>
+                        <button type="button"
+                                class="archive-action"
+                                data-action="delete"
+                                data-id="${escapeHTML(p.id)}"
+                                title="Delete Permanently">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    function renderInventory() {
+        const filtered = filteredProducts();
+        const total = showingArchived
+            ? archivedProducts.length
+            : products.length;
+
+        $("inventoryRecordCount").textContent =
+            `${total} ${total === 1 ? "record" : "records"}`;
+
+        $("resultsCount").textContent =
+            `Showing ${filtered.length} of ${total} products`;
+
+        $("inventoryHeading").textContent = showingArchived
+            ? "Archived Products"
+            : "Product Inventory";
+
+        $("inventorySubtitle").textContent = showingArchived
+            ? "Restore archived products or delete them permanently."
+            : "Check product details, quantities, and stock status.";
+
+        $("toggleArchivedButton").innerHTML = showingArchived
+            ? '<i class="fa-solid fa-arrow-left"></i> Active Products'
+            : '<i class="fa-solid fa-box-archive"></i> Archived Products';
+
+        $("addProductButton").hidden = showingArchived;
+        $("activeTableWrapper").hidden = showingArchived;
+        $("archivedTableWrapper").hidden = !showingArchived;
+
+        const tbody = showingArchived
+            ? $("archivedInventoryTableBody")
+            : $("inventoryTableBody");
+
+        tbody.innerHTML = filtered.length
+            ? filtered.map(showingArchived ? archivedRow : activeRow).join("")
+            : `
+                <tr>
+                    <td colspan="6"
+                        style="text-align:center;padding:40px;color:#b6c6b9">
+                        <i class="fa-solid fa-box-open"></i>
+                        <p>No products found.</p>
+                    </td>
+                </tr>
+            `;
+
+        updateNotifications();
+    }
+
+    function handleTableAction(event) {
+        const button = event.target.closest("button[data-action]");
+        if (!button) return;
+
+        const { action, id } = button.dataset;
+
+        switch (action) {
+            case "view":
+                openViewProduct(id, showingArchived);
+                break;
+            case "edit":
+                openEditProduct(id);
+                break;
+            case "archive":
+                archiveProduct(id);
+                break;
+            case "restore":
+                restoreProduct(id);
+                break;
+            case "delete":
+                permanentlyDelete(id);
+                break;
+        }
+    }
+
+    $("inventoryTableBody").addEventListener(
+        "click", handleTableAction
+    );
+
+    $("archivedInventoryTableBody").addEventListener(
+        "click", handleTableAction
+    );
+
+    $("toggleArchivedButton").addEventListener("click", () => {
+        showingArchived = !showingArchived;
+        renderInventory();
+    });
+
+    $("searchInput").addEventListener("input", renderInventory);
+    $("categoryFilter").addEventListener("change", renderInventory);
+    $("stockFilter").addEventListener("change", renderInventory);
+
+    $("resetFiltersButton").addEventListener("click", () => {
+        $("searchInput").value = "";
+        $("categoryFilter").value = "all";
+        $("stockFilter").value = "all";
+        renderInventory();
+    });
+
+    // ========================================
+    // EXPORT CSV / EXCEL
+    // ========================================
+
+    function exportRows() {
+        return filteredProducts().map(p => ({
+            "Product ID": p.id,
+            "Product Name": p.name,
+            "Category": p.category,
+            "Quantity": p.quantity,
+            "Unit": p.unit,
+            "Unit Price": p.price,
+            "Threshold": p.threshold,
+            "Stock Status": statusOf(p)
+        }));
+    }
+
+    function downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function exportCSV() {
+        const rows = exportRows();
+
+        if (!rows.length) {
+            toast("No products to export.", true);
+            return;
+        }
+
+        const headers = Object.keys(rows[0]);
+        const cell = value =>
+            '"' + String(value ?? "").replaceAll('"', '""') + '"';
+
+        const csv = [
+            headers.map(cell).join(","),
+            ...rows.map(row =>
+                headers.map(header => cell(row[header])).join(",")
+            )
+        ].join("\r\n");
+
+        downloadBlob(
+            new Blob(["\uFEFF" + csv], {
+                type: "text/csv;charset=utf-8"
+            }),
+            "printify-inventory.csv"
         );
 
+        toast("CSV exported successfully.");
     }
 
-    if (sidebar) {
+    function exportExcel() {
+        const rows = exportRows();
 
-        sidebar.setAttribute(
-            "aria-label",
-            "Main navigation"
+        if (!rows.length) {
+            toast("No products to export.", true);
+            return;
+        }
+
+        const headers = Object.keys(rows[0]);
+
+        const table = `
+            <table border="1">
+                <thead>
+                    <tr>
+                        ${headers.map(h =>
+                            `<th>${escapeHTML(h)}</th>`
+                        ).join("")}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows.map(row => `
+                        <tr>
+                            ${headers.map(h =>
+                                `<td>${escapeHTML(row[h])}</td>`
+                            ).join("")}
+                        </tr>
+                    `).join("")}
+                </tbody>
+            </table>
+        `;
+
+        downloadBlob(
+            new Blob([table], {
+                type: "application/vnd.ms-excel;charset=utf-8"
+            }),
+            "printify-inventory.xls"
         );
 
+        toast("Excel-compatible file exported.");
     }
 
+    $("exportCsvButton").addEventListener("click", exportCSV);
+    $("exportExcelButton").addEventListener("click", exportExcel);
 
-    // ==================================================
-    // 22. INITIAL DISPLAY
-    // ==================================================
+    // ========================================
+    // STOCK NOTIFICATIONS
+    // ========================================
 
-    refreshInventory();
+    function updateNotifications() {
+        const count = products.filter(
+            p => statusOf(p) !== "In Stock"
+        ).length;
 
-    console.log("Printify Inventory initialized successfully.");
+        const dot = document.querySelector(".notification-dot");
+        if (dot) dot.style.display = count ? "" : "none";
+    }
 
+    $("notificationButton").addEventListener("click", () => {
+        const low = products.filter(
+            p => statusOf(p) === "Low Stock"
+        ).length;
+
+        const out = products.filter(
+            p => statusOf(p) === "Out of Stock"
+        ).length;
+
+        toast(low || out
+            ? `${low} low-stock and ${out} out-of-stock products.`
+            : "All products have sufficient stock.");
+    });
+
+    // ========================================
+    // DATE AND YEAR
+    // ========================================
+
+    const dateElement = $("currentDate")?.querySelector("span");
+
+    if (dateElement) {
+        dateElement.textContent = new Date().toLocaleDateString(
+            "en-PH",
+            {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+                year: "numeric"
+            }
+        );
+    }
+
+    $("currentYear").textContent = new Date().getFullYear();
+
+    // ========================================
+    // SIDEBAR
+    // ========================================
+
+    const sidebar = $("sidebar");
+    const sidebarOverlay = $("sidebarOverlay");
+
+    function updateSidebar() {
+        if (window.innerWidth <= 850) {
+            sidebar.classList.add("is-hidden");
+            sidebarOverlay.classList.remove("show");
+            body.classList.remove("mobile-sidebar-open");
+        } else {
+            const hidden =
+                localStorage.getItem("printify-sidebar-hidden") === "true";
+
+            sidebar.classList.toggle("is-hidden", hidden);
+            body.classList.toggle("sidebar-hidden", hidden);
+        }
+    }
+
+    $("menuToggle").addEventListener("click", () => {
+        const hidden = sidebar.classList.toggle("is-hidden");
+
+        if (window.innerWidth <= 850) {
+            sidebarOverlay.classList.toggle("show", !hidden);
+            body.classList.toggle("mobile-sidebar-open", !hidden);
+        } else {
+            body.classList.toggle("sidebar-hidden", hidden);
+            localStorage.setItem(
+                "printify-sidebar-hidden",
+                String(hidden)
+            );
+        }
+    });
+
+    sidebarOverlay.addEventListener("click", () => {
+        sidebar.classList.add("is-hidden");
+        sidebarOverlay.classList.remove("show");
+        body.classList.remove("mobile-sidebar-open");
+    });
+
+    window.addEventListener("resize", updateSidebar);
+
+    // ========================================
+    // THEME
+    // ========================================
+
+    function applyTheme(theme) {
+        const dark = theme === "dark";
+        body.classList.toggle("dark-mode", dark);
+
+        $("themeIcon").src = dark
+            ? "image/lightmode_icon.png"
+            : "image/nightmode_icon.png";
+    }
+
+    applyTheme(localStorage.getItem("printify-theme") || "dark");
+
+    $("themeToggle").addEventListener("click", () => {
+        const theme = body.classList.contains("dark-mode")
+            ? "light"
+            : "dark";
+
+        applyTheme(theme);
+        localStorage.setItem("printify-theme", theme);
+    });
+
+    // ========================================
+    // PROFILE AND LOGOUT
+    // ========================================
+
+    $("profileButton").addEventListener("click", event => {
+        event.stopPropagation();
+        $("profileDropdown").classList.toggle("show");
+    });
+
+    document.addEventListener("click", event => {
+        if (!event.target.closest(".profile-container")) {
+            $("profileDropdown").classList.remove("show");
+        }
+    });
+
+    $("logoutButton").addEventListener("click", () => {
+        confirmAction(
+            "Log Out?",
+            "Are you sure you want to log out?",
+            () => {
+                if (window.PrintifyAPI?.logout) {
+                    PrintifyAPI.logout();
+                } else {
+                    window.location.href = "login.html";
+                }
+            },
+            "Log Out"
+        );
+    });
+
+    // ========================================
+    // INITIALIZE
+    // ========================================
+
+    loadArchives();
+    loadInventory();
+    updateSidebar();
+    renderInventory();
 });

@@ -511,25 +511,43 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    // ==================================================
-    // 7. LOGOUT
-    // ==================================================
+   
+document.addEventListener("DOMContentLoaded", () => {
+    const logoutButton = document.querySelector(
+        "#logoutButton, #logoutBtn, [data-action='logout']"
+    );
 
-    if (logoutButton) {
+    if (!logoutButton) {
+        console.warn("Logout button not found.");
+        return;
+    }
 
-        logoutButton.addEventListener("click", function () {
+    logoutButton.addEventListener("click", async (event) => {
+        event.preventDefault();
 
-            const confirmLogout = confirm(
-                "Are you sure you want to log out?"
-            );
+        if (!confirm("Are you sure you want to log out?")) {
+            return;
+        }
 
-            if (confirmLogout) {
-                (window.PrintifyAPI ? PrintifyAPI.logout() : (window.location.href = "login.html"));
+        try {
+            const response = await fetch("/api/auth/logout", {
+                method: "POST",
+                credentials: "include"
+            });
+
+            if (!response.ok) {
+                throw new Error("Logout request failed.");
             }
 
-        });
+            // Redirect only after successful server logout.
+            window.location.replace("/login.html");
+        } catch (error) {
+            console.error("Logout error:", error);
+            alert("Logout failed. Please try again.");
+        }
+    });
+});
 
-    }
 
 
     // ==================================================
@@ -708,7 +726,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let attendance = loadData(
         "printifyAttendance",
-        defaultAttendance
+        []
     );
 
 
@@ -734,6 +752,37 @@ document.addEventListener("DOMContentLoaded", function () {
 
     }
 
+
+    // Database is authoritative; localStorage remains a fallback if server is unavailable.
+    function loadAttendanceFromServer() {
+        if (!window.PrintifyAPI || typeof window.PrintifyAPI.request !== "function") return;
+        const result = window.PrintifyAPI.request("GET", "/api/staff/attendance");
+        if (result.status !== 200 || !result.data || !Array.isArray(result.data.items)) {
+            console.warn("Attendance server unavailable; displaying locally saved records.");
+            return;
+        }
+        attendance = result.data.items.map(function (record) {
+            return {
+                id: String(record.id), staffId: record.staffId,
+                date: record.date, timeIn: record.timeIn || "",
+                timeOut: record.timeOut || "", status: record.status || "Working"
+            };
+        });
+        saveAttendance();
+    }
+
+    function loadStaffFromServer() {
+        if (!window.PrintifyAPI || typeof window.PrintifyAPI.request !== "function") return;
+        const result = window.PrintifyAPI.request("GET", "/api/staff");
+        if (result.status !== 200 || !result.data || !Array.isArray(result.data.items)) return;
+        staff.splice(0, staff.length, ...result.data.items.map(function (item) {
+            return {
+                id: String(item.staffCode || item.staffId || item.code || item.id),
+                name: String(item.name || item.fullName || "Staff"),
+                position: String(item.position || "Staff Member")
+            };
+        }));
+    }
 
     // ==================================================
     // 11. HELPER FUNCTIONS
@@ -1367,7 +1416,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         try {
             const scannedUrl = new URL(scannedValue);
-            const scannedStaffCode = scannedUrl.origin === window.location.origin && scannedUrl.pathname.endsWith("/attendance-scan.html")
+            const scannedStaffCode = scannedUrl.pathname.endsWith("/attendance-scan.html")
                 ? scannedUrl.searchParams.get("staffCode")
                 : "";
 
@@ -1434,7 +1483,7 @@ document.addEventListener("DOMContentLoaded", function () {
             attendance.unshift(record);
         }
 
-        saveAttendance();
+        loadAttendanceFromServer();
         refreshTracking();
         closeQRScanner();
 
@@ -1530,6 +1579,20 @@ document.addEventListener("DOMContentLoaded", function () {
         const supportsNativeQr = typeof window.BarcodeDetector === "function";
         const supportsJsQr = typeof window.jsQR === "function";
 
+        if (!supportsNativeQr && !supportsJsQr) {
+
+            scannerMessage.textContent =
+                "QR scanner could not load. Check the internet connection or enter the Staff ID manually.";
+
+            showToast(
+                "QR scanner could not load. Enter the Staff ID manually.",
+                "error"
+            );
+
+            return;
+
+        }
+
         if (cameraStream || isCameraStarting) {
             return;
         }
@@ -1540,39 +1603,30 @@ document.addEventListener("DOMContentLoaded", function () {
 
         try {
 
-            // Ask for camera permission immediately from the user's click.
-            // Do not wait for QR decoder initialization or CDN scripts.
+            barcodeDetector = supportsNativeQr
+                ? new window.BarcodeDetector({ formats: ["qr_code"] })
+                : null;
+
+            if (!barcodeDetector) {
+                qrScanCanvas = document.createElement("canvas");
+                qrScanContext = qrScanCanvas.getContext("2d", { willReadFrequently: true });
+
+                if (!qrScanContext) {
+                    throw new Error("Unable to initialize the QR scanner.");
+                }
+            }
+
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { ideal: "environment" } },
+                video: {
+                    facingMode: "environment"
+                },
                 audio: false
             });
 
             if (requestId !== cameraRequestId) {
-                stream.getTracks().forEach(track => track.stop());
-                return;
-            }
-
-            barcodeDetector = null;
-            if (supportsNativeQr) {
-                try {
-                    const formats = typeof window.BarcodeDetector.getSupportedFormats === "function"
-                        ? await window.BarcodeDetector.getSupportedFormats()
-                        : ["qr_code"];
-                    if (formats.includes("qr_code")) {
-                        barcodeDetector = new window.BarcodeDetector({ formats: ["qr_code"] });
-                    }
-                } catch (detectorError) {
-                    console.warn("Native QR decoder unavailable:", detectorError);
-                }
-            }
-
-            if (!barcodeDetector && supportsJsQr) {
-                qrScanCanvas = document.createElement("canvas");
-                qrScanContext = qrScanCanvas.getContext("2d", { willReadFrequently: true });
-            }
-
-            if (requestId !== cameraRequestId) {
-                stream.getTracks().forEach(track => track.stop());
+                stream.getTracks().forEach(function (track) {
+                    track.stop();
+                });
                 return;
             }
 
@@ -1584,14 +1638,9 @@ document.addEventListener("DOMContentLoaded", function () {
             await scannerVideo.play();
 
             isScanning = true;
-            if (!barcodeDetector && !qrScanContext) {
-                scannerMessage.textContent =
-                    "Camera is active, but the QR decoder did not load. Check your internet connection or enter the Staff ID manually.";
-            } else {
-                scannerMessage.textContent =
-                    "Camera is active. Position the QR code inside the frame.";
-                scanForQRCode();
-            }
+            scannerMessage.textContent =
+                "Camera is active. Position the QR code inside the frame.";
+            scanForQRCode();
 
         } catch (error) {
 
@@ -2067,6 +2116,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // 28. INITIAL DISPLAY
     // ==================================================
 
+    loadStaffFromServer();
+    loadAttendanceFromServer();
     refreshTracking();
 
     console.log("Printify Staff Tracking initialized successfully.");

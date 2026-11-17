@@ -2,9 +2,11 @@
 /* =========================================================
    PRINTIFY CALAPAN
    ORDERS PAGE JAVASCRIPT
+   PART 1 — ELEMENTS, STORAGE AND HELPERS
 ========================================================= */
 
 document.addEventListener("DOMContentLoaded", function () {
+    "use strict";
 
     /* =====================================================
        1. STORAGE AND ELEMENTS
@@ -91,49 +93,73 @@ document.addEventListener("DOMContentLoaded", function () {
     const toastText = document.getElementById("toastText");
     const toastIcon = document.getElementById("toastIcon");
 
-    let orders = loadOrders();
-    let selectedViewOrderId = null;
-    let toastTimer = null;
+    /* ARCHIVED ORDERS */
 
+    const showArchivedOrdersButton =
+        document.getElementById("showArchivedOrdersButton");
+
+    const backToActiveOrdersButton =
+        document.getElementById("backToActiveOrdersButton");
+
+    const archivedOrdersPanel =
+        document.getElementById("archivedOrdersPanel");
+
+    const archivedOrdersTableBody =
+        document.getElementById("archivedOrdersTableBody");
+
+    const archivedRecordCount =
+        document.getElementById("archivedRecordCount");
+
+    const archivedEmptyState =
+        document.getElementById("archivedEmptyState");
+
+    const searchArchivedOrders =
+        document.getElementById("searchArchivedOrders");
+
+    let orders = loadOrders();
+    let archivedOrders = [];
+
+    let selectedViewOrderId = null;
+    let selectedArchiveOrderId = null;
+    let confirmationAction = null;
+
+    let toastTimer = null;
+    let archiveActionInProgress = false;
 
     /* =====================================================
-       2. HELPER FUNCTIONS
+       2. STORAGE
     ===================================================== */
 
     function loadOrders() {
-
         try {
-            const savedOrders = localStorage.getItem(ORDERS_KEY);
+            const saved = localStorage.getItem(ORDERS_KEY);
 
-            if (!savedOrders) {
-                return [];
-            }
+            if (!saved) return [];
 
-            const parsedOrders = JSON.parse(savedOrders);
+            const parsed = JSON.parse(saved);
 
-            return Array.isArray(parsedOrders) ? parsedOrders : [];
-
+            return Array.isArray(parsed) ? parsed : [];
         } catch (error) {
             console.error("Unable to load orders:", error);
             return [];
         }
     }
 
-
     function saveOrders() {
-
         try {
-
-            // I-save muna sa server (PostgreSQL) para makita ng Staff ang naka-assign sa kanila.
-            if (window.PrintifyAPI) {
-
+            if (
+                window.PrintifyAPI &&
+                typeof window.PrintifyAPI.syncOrders === "function"
+            ) {
                 const result = window.PrintifyAPI.syncOrders(orders);
 
-                if (!result.ok) {
-                    showToast(result.message || "Unable to save the order to the server.", "error");
+                if (result && result.ok === false) {
+                    showToast(
+                        result.message || "Unable to save orders.",
+                        "error"
+                    );
                     return false;
                 }
-
             }
 
             localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
@@ -143,7 +169,7 @@ document.addEventListener("DOMContentLoaded", function () {
             console.error("Unable to save orders:", error);
 
             showToast(
-                "Unable to save orders. Browser storage may be full.",
+                "Unable to save orders. Please check your connection.",
                 "error"
             );
 
@@ -151,83 +177,24 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-
     function loadStaffOptions() {
-
         try {
-            const saved = JSON.parse(localStorage.getItem("printifyStaff") || "[]");
+            const saved = JSON.parse(
+                localStorage.getItem("printifyStaff") || "[]"
+            );
+
             return Array.isArray(saved) ? saved : [];
         } catch (error) {
             return [];
         }
     }
 
-
-    // Punan ang "Assign to Staff" ng mga Staff na pwedeng bigyan ng order.
-    function populateStaffSelect(selectedId, selectedName) {
-
-        if (!assignedStaff) {
-            return;
-        }
-
-        assignedStaff.innerHTML = "";
-
-        const none = document.createElement("option");
-        none.value = "";
-        none.textContent = "Auto-assign to next active staff";
-        assignedStaff.appendChild(none);
-
-        let found = false;
-
-        loadStaffOptions().forEach(function (staff) {
-
-            const isSelected = staff.userId === selectedId;
-
-            // Hindi na lalabas ang Inactive, maliban kung siya ang kasalukuyang naka-assign.
-            if (staff.status === "Inactive" && !isSelected) {
-                return;
-            }
-
-            const option = document.createElement("option");
-            option.value = staff.userId;
-            option.textContent = staff.name + (staff.position ? " - " + staff.position : "");
-            assignedStaff.appendChild(option);
-
-            if (isSelected) {
-                found = true;
-            }
-        });
-
-        if (selectedId && !found) {
-
-            const option = document.createElement("option");
-            option.value = selectedId;
-            option.textContent = selectedName || "Former staff";
-            assignedStaff.appendChild(option);
-        }
-
-        assignedStaff.value = selectedId || "";
-    }
-
-
-    function getAssignedStaffName(id) {
-
-        if (!id) {
-            return "";
-        }
-
-        const match = loadStaffOptions().find(function (staff) {
-            return staff.userId === id;
-        });
-
-        return match ? match.name : "";
-    }
-
+    /* =====================================================
+       3. GENERAL HELPERS
+    ===================================================== */
 
     function escapeHTML(value) {
-
         return String(value ?? "").replace(/[&<>"']/g, function (character) {
-
             const entities = {
                 "&": "&amp;",
                 "<": "&lt;",
@@ -240,9 +207,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-
     function formatCurrency(value) {
-
         return new Intl.NumberFormat("en-PH", {
             style: "currency",
             currency: "PHP",
@@ -250,24 +215,15 @@ document.addEventListener("DOMContentLoaded", function () {
         }).format(Number(value) || 0);
     }
 
+    function formatDate(value) {
+        if (!value) return "—";
 
-    function formatDate(dateValue) {
+        const date = new Date(value);
 
-        if (!dateValue) {
-            return "—";
+
+        if (Number.isNaN(date.getTime())) {
+            return String(value);
         }
-
-        const parts = dateValue.split("-");
-
-        if (parts.length !== 3) {
-            return dateValue;
-        }
-
-        const date = new Date(
-            Number(parts[0]),
-            Number(parts[1]) - 1,
-            Number(parts[2])
-        );
 
         return date.toLocaleDateString("en-PH", {
             month: "short",
@@ -276,44 +232,37 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-
     function getToday() {
-
         const today = new Date();
 
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, "0");
-        const day = String(today.getDate()).padStart(2, "0");
-
-        return `${year}-${month}-${day}`;
+        return [
+            today.getFullYear(),
+            String(today.getMonth() + 1).padStart(2, "0"),
+            String(today.getDate()).padStart(2, "0")
+        ].join("-");
     }
 
-
     function showToast(message, type = "success") {
-
         if (!toastMessage || !toastText) {
+            console.log(message);
             return;
         }
 
         clearTimeout(toastTimer);
 
         toastText.textContent = message;
-
         toastMessage.classList.remove("error");
 
         if (type === "error") {
-
             toastMessage.classList.add("error");
 
             if (toastIcon) {
-                toastIcon.className = "fa-solid fa-circle-exclamation";
+                toastIcon.className =
+                    "fa-solid fa-circle-exclamation";
             }
-
-        } else {
-
-            if (toastIcon) {
-                toastIcon.className = "fa-solid fa-circle-check";
-            }
+        } else if (toastIcon) {
+            toastIcon.className =
+                "fa-solid fa-circle-check";
         }
 
         toastMessage.classList.add("show");
@@ -323,9 +272,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 3000);
     }
 
-
     function getInitials(name) {
-
         return String(name || "")
             .trim()
             .split(/\s+/)
@@ -335,14 +282,25 @@ document.addEventListener("DOMContentLoaded", function () {
             .join("");
     }
 
+    function getStatusClass(status) {
+        return String(status || "")
+            .toLowerCase()
+            .replace(/\s+/g, "-");
+    }
+
+    function getPaymentClass(status) {
+        return String(status || "")
+            .toLowerCase()
+            .replace(/\s+/g, "-");
+    }
 
     function generateOrderId() {
-
         let highestNumber = 0;
 
-        orders.forEach(function (order) {
-
-            const match = String(order.id || "").match(/ORD-(\d+)/);
+        [...orders, ...archivedOrders].forEach(function (order) {
+            const match = String(
+                order.id || order.Id || ""
+            ).match(/ORD-(\d+)/);
 
             if (match) {
                 highestNumber = Math.max(
@@ -352,32 +310,83 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 
-        return "ORD-" + String(highestNumber + 1).padStart(4, "0");
+        return "ORD-" +
+            String(highestNumber + 1).padStart(4, "0");
     }
 
+    function getAssignedStaffName(id) {
+        if (!id) return "";
 
-    function getStatusClass(status) {
+        const match = loadStaffOptions().find(function (staff) {
+            return String(staff.userId) === String(id);
+        });
 
-        return String(status || "")
-            .toLowerCase()
-            .replace(/\s+/g, "-");
+        return match ? match.name : "";
     }
 
+    function populateStaffSelect(selectedId, selectedName) {
+        if (!assignedStaff) return;
 
-    function getPaymentClass(status) {
+        assignedStaff.innerHTML = "";
 
-        return String(status || "")
-            .toLowerCase()
-            .replace(/\s+/g, "-");
+        const none = document.createElement("option");
+        none.value = "";
+        none.textContent = "Auto-assign to next active staff";
+        assignedStaff.appendChild(none);
+
+        let found = false;
+
+        loadStaffOptions().forEach(function (staff) {
+            const isSelected =
+                String(staff.userId) === String(selectedId);
+
+            if (staff.status === "Inactive" && !isSelected) {
+                return;
+            }
+
+            const option = document.createElement("option");
+            option.value = staff.userId;
+            option.textContent =
+                staff.name +
+                (staff.position ? " - " + staff.position : "");
+
+            assignedStaff.appendChild(option);
+
+            if (isSelected) found = true;
+        });
+
+        if (selectedId && !found) {
+            const option = document.createElement("option");
+            option.value = selectedId;
+            option.textContent =
+                selectedName || "Former staff";
+            assignedStaff.appendChild(option);
+        }
+
+        assignedStaff.value = selectedId || "";
     }
 
+    function getArchivedValue(order, camelName, pascalName) {
+        return order?.[camelName] ?? order?.[pascalName];
+    }
+
+    function normalizeOrdersResponse(result) {
+        if (Array.isArray(result)) return result;
+        if (Array.isArray(result?.data)) return result.data;
+        if (Array.isArray(result?.orders)) return result.orders;
+        if (Array.isArray(result?.items)) return result.items;
+        if (Array.isArray(result?.data?.orders)) {
+            return result.data.orders;
+        }
+
+        return null;
+    }
 
     /* =====================================================
-       3. CURRENT DATE AND YEAR
+       4. CURRENT DATE AND YEAR
     ===================================================== */
 
     if (currentDate) {
-
         const dateText = currentDate.querySelector("span");
 
         if (dateText) {
@@ -394,21 +403,16 @@ document.addEventListener("DOMContentLoaded", function () {
         currentYear.textContent = new Date().getFullYear();
     }
 
-
     /* =====================================================
-       4. SIDEBAR TOGGLE
+       5. SIDEBAR
     ===================================================== */
 
     function isMobileView() {
         return window.matchMedia("(max-width: 850px)").matches;
     }
 
-
     function setSidebarState(hidden, save = true) {
-
-        if (!sidebar) {
-            return;
-        }
+        if (!sidebar) return;
 
         sidebar.classList.toggle("is-hidden", hidden);
         document.body.classList.toggle("sidebar-hidden", hidden);
@@ -429,106 +433,87 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-
     if (sidebar) {
-
-        const savedSidebarState = localStorage.getItem(SIDEBAR_KEY);
+        const saved = localStorage.getItem(SIDEBAR_KEY);
 
         if (isMobileView()) {
             setSidebarState(true, false);
-        } else if (savedSidebarState !== null) {
-            setSidebarState(savedSidebarState === "true", false);
+        } else if (saved !== null) {
+            setSidebarState(saved === "true", false);
         } else {
             setSidebarState(false, false);
         }
     }
 
-
     if (menuToggle) {
-
         menuToggle.addEventListener("click", function () {
-
-            const currentlyHidden = sidebar
+            const hidden = sidebar
                 ? sidebar.classList.contains("is-hidden")
                 : true;
 
-            setSidebarState(!currentlyHidden);
+            setSidebarState(!hidden);
         });
     }
 
-
     if (sidebarOverlay) {
-
         sidebarOverlay.addEventListener("click", function () {
             setSidebarState(true);
         });
     }
 
-
     window.addEventListener("resize", function () {
-
         if (isMobileView()) {
             setSidebarState(true, false);
         } else {
-            const savedState = localStorage.getItem(SIDEBAR_KEY);
-            setSidebarState(savedState === "true", false);
+            setSidebarState(
+                localStorage.getItem(SIDEBAR_KEY) === "true",
+                false
+            );
         }
     });
 
-
     /* =====================================================
-       5. THEME TOGGLE
+       6. THEME
     ===================================================== */
 
     function applyTheme(theme) {
+        const dark = theme !== "light";
 
-        const isDark = theme === "dark";
-
-        document.body.classList.toggle("dark-mode", isDark);
+        document.body.classList.toggle("dark-mode", dark);
 
         if (themeIcon) {
-            themeIcon.src = isDark
-                ? "image/nightmode_icon.png"
-                : "image/lightmode_icon.png";
-
-            themeIcon.alt = isDark ? "Dark mode" : "Light mode";
+            themeIcon.src = dark
+                ? "image/lightmode_icon.png"
+                : "image/darkmode_icon.png";
         }
 
         if (themeToggle) {
             themeToggle.setAttribute(
                 "aria-label",
-                isDark ? "Switch to light mode" : "Switch to dark mode"
+                dark ? "Switch to light mode" : "Switch to dark mode"
             );
         }
     }
 
-
-    const savedTheme = localStorage.getItem(THEME_KEY);
-
-    applyTheme(savedTheme || "dark");
-
+    applyTheme(localStorage.getItem(THEME_KEY) || "dark");
 
     if (themeToggle) {
-
         themeToggle.addEventListener("click", function () {
+            const nextTheme = document.body.classList.contains("dark-mode")
+                ? "light"
+                : "dark";
 
-            const isDark = document.body.classList.contains("dark-mode");
-            const newTheme = isDark ? "light" : "dark";
-
-            localStorage.setItem(THEME_KEY, newTheme);
-            applyTheme(newTheme);
+            localStorage.setItem(THEME_KEY, nextTheme);
+            applyTheme(nextTheme);
         });
     }
 
-
     /* =====================================================
-       6. PROFILE DROPDOWN
+       7. PROFILE, LOGOUT, NOTIFICATIONS
     ===================================================== */
 
     if (profileButton && profileDropdown) {
-
         profileButton.addEventListener("click", function (event) {
-
             event.stopPropagation();
 
             const isOpen = profileDropdown.classList.toggle("show");
@@ -536,49 +521,46 @@ document.addEventListener("DOMContentLoaded", function () {
             profileButton.setAttribute("aria-expanded", String(isOpen));
         });
 
-        document.addEventListener("click", function (event) {
+        profileDropdown.addEventListener("click", function (event) {
+            event.stopPropagation();
+        });
 
-            if (
-                !profileDropdown.contains(event.target) &&
-                !profileButton.contains(event.target)
-            ) {
-                profileDropdown.classList.remove("show");
-                profileButton.setAttribute("aria-expanded", "false");
-            }
+        document.addEventListener("click", function () {
+            profileDropdown.classList.remove("show");
+            profileButton.setAttribute("aria-expanded", "false");
         });
     }
-
 
     if (logoutButton) {
-
         logoutButton.addEventListener("click", function () {
+            if (!window.confirm("Are you sure you want to log out?")) {
+                return;
+            }
 
-            const confirmLogout = confirm("Are you sure you want to log out?");
-
-            if (confirmLogout) {
-                (window.PrintifyAPI ? PrintifyAPI.logout() : (window.location.href = "login.html"));
+            if (
+                window.PrintifyAPI &&
+                typeof window.PrintifyAPI.logout === "function"
+            ) {
+                window.PrintifyAPI.logout();
+            } else {
+                window.location.href = "login.html";
             }
         });
     }
 
-
     if (notificationButton) {
-
         notificationButton.addEventListener("click", function () {
             showToast("You are all caught up with your notifications.");
         });
     }
 
-
     /* =====================================================
-       7. ORDER TOTAL COMPUTATION
+       8. ORDER TOTAL
     ===================================================== */
 
     function calculateTotal() {
-
-        const qty = Number(quantity.value) || 0;
-        const price = Number(unitPrice.value) || 0;
-
+        const qty = Number(quantity?.value) || 0;
+        const price = Number(unitPrice?.value) || 0;
         const total = qty * price;
 
         if (orderTotalPreview) {
@@ -588,30 +570,43 @@ document.addEventListener("DOMContentLoaded", function () {
         return total;
     }
 
-
-    if (quantity) {
-        quantity.addEventListener("input", calculateTotal);
-    }
-
-    if (unitPrice) {
-        unitPrice.addEventListener("input", calculateTotal);
-    }
-
+    quantity?.addEventListener("input", calculateTotal);
+    unitPrice?.addEventListener("input", calculateTotal);
 
     /* =====================================================
-       8. MODAL CONTROLS
+       9. ORDER MODALS
     ===================================================== */
 
-    function openOrderModal(editing = false) {
+    let orderFormSnapshot = "";
 
-        if (!orderModal) {
-            return;
-        }
+    function captureOrderForm() {
+        if (!orderForm) return "";
+
+        return JSON.stringify(
+            Array.from(orderForm.elements)
+                .filter(element => element.id)
+                .map(element => [element.id, element.value])
+        );
+    }
+
+    function syncModalScroll() {
+        const archive =
+            document.getElementById("printifyArchiveConfirm");
+
+        const anyOpen = [
+            orderModal,
+            viewOrderModal,
+            archive
+        ].some(element => element?.classList.contains("show"));
+
+        document.body.classList.toggle("modal-open", anyOpen);
+    }
+
+    function openOrderModal(editing = false) {
+        if (!orderModal) return;
 
         orderModal.classList.add("show");
         orderModal.setAttribute("aria-hidden", "false");
-
-        document.body.classList.add("modal-open");
 
         if (modalTitle) {
             modalTitle.textContent = editing
@@ -630,73 +625,69 @@ document.addEventListener("DOMContentLoaded", function () {
             formMessage.classList.remove("show");
         }
 
-        setTimeout(function () {
+        orderFormSnapshot = captureOrderForm();
+        syncModalScroll();
 
-            if (customerName) {
-                customerName.focus();
-            }
-
-        }, 100);
+        setTimeout(() => customerName?.focus(), 100);
     }
 
-
     function closeOrderModalFunction() {
-
-        if (!orderModal) {
-            return;
-        }
+        if (!orderModal) return;
 
         orderModal.classList.remove("show");
         orderModal.setAttribute("aria-hidden", "true");
 
-        document.body.classList.remove("modal-open");
+        syncModalScroll();
     }
 
-
-    function openViewModal() {
-
-        if (!viewOrderModal) {
+    function requestCloseOrderModal() {
+        if (!orderModal?.classList.contains("show")) {
             return;
         }
+
+        if (captureOrderForm() !== orderFormSnapshot) {
+            const discard = window.confirm(
+                "You have unsaved changes. Discard them?"
+            );
+
+            if (!discard) return;
+        }
+
+        closeOrderModalFunction();
+    }
+
+    function openViewModal() {
+        if (!viewOrderModal) return;
 
         viewOrderModal.classList.add("show");
         viewOrderModal.setAttribute("aria-hidden", "false");
 
-        document.body.classList.add("modal-open");
+        syncModalScroll();
     }
 
-
     function closeViewModalFunction() {
-
-        if (!viewOrderModal) {
-            return;
-        }
+        if (!viewOrderModal) return;
 
         viewOrderModal.classList.remove("show");
         viewOrderModal.setAttribute("aria-hidden", "true");
 
-        document.body.classList.remove("modal-open");
+        syncModalScroll();
     }
 
-
     function resetOrderForm() {
-
-        if (!orderForm) {
-            return;
-        }
+        if (!orderForm) return;
 
         orderForm.reset();
 
-        editOrderId.value = "";
+        if (editOrderId) editOrderId.value = "";
+        if (quantity) quantity.value = "1";
+        if (amountPaid) amountPaid.value = "0";
 
-        quantity.value = "1";
-        amountPaid.value = "0";
+        if (orderDate) orderDate.value = getToday();
+        if (dueDate) dueDate.value = getToday();
 
-        orderDate.value = getToday();
-        dueDate.value = getToday();
-
-        orderStatus.value = "Pending";
-        paymentStatus.value = "Unpaid";
+        if (orderStatus) orderStatus.value = "Pending";
+        if (paymentStatus) paymentStatus.value = "Unpaid";
 
         populateStaffSelect("", "");
 
@@ -708,325 +699,434 @@ document.addEventListener("DOMContentLoaded", function () {
         calculateTotal();
     }
 
-
     function showFormError(message) {
-
-        if (!formMessage) {
-            return;
-        }
+        if (!formMessage) return;
 
         formMessage.textContent = message;
         formMessage.classList.add("show");
     }
 
+    /* CREATE ORDER BUTTONS */
 
-    if (addOrderButton) {
+    addOrderButton?.addEventListener("click", function () {
+        resetOrderForm();
+        openOrderModal(false);
+    });
 
-        addOrderButton.addEventListener("click", function () {
+    emptyCreateButton?.addEventListener("click", function () {
+        resetOrderForm();
+        openOrderModal(false);
+    });
 
-            resetOrderForm();
-            openOrderModal(false);
-        });
-    }
+    /* CLOSE BUTTONS */
 
+    closeOrderModal?.addEventListener(
+        "click",
+        requestCloseOrderModal
+    );
 
-    if (emptyCreateButton) {
+    cancelOrderButton?.addEventListener(
+        "click",
+        requestCloseOrderModal
+    );
 
-        emptyCreateButton.addEventListener("click", function () {
+    closeViewModal?.addEventListener(
+        "click",
+        closeViewModalFunction
+    );
 
-            resetOrderForm();
-            openOrderModal(false);
-        });
-    }
+    closeViewButton?.addEventListener(
+        "click",
+        closeViewModalFunction
+    );
 
+    /* PREVENT BACKDROP FROM CLOSING */
 
-    if (closeOrderModal) {
-        closeOrderModal.addEventListener("click", closeOrderModalFunction);
-    }
-
-    if (cancelOrderButton) {
-        cancelOrderButton.addEventListener("click", closeOrderModalFunction);
-    }
-
-    if (closeViewModal) {
-        closeViewModal.addEventListener("click", closeViewModalFunction);
-    }
-
-    if (closeViewButton) {
-        closeViewButton.addEventListener("click", closeViewModalFunction);
-    }
-
-
-    if (orderModal) {
-
-        orderModal.addEventListener("click", function (event) {
-
-            if (event.target === orderModal) {
-                closeOrderModalFunction();
-            }
-        });
-    }
-
-
-    if (viewOrderModal) {
-
-        viewOrderModal.addEventListener("click", function (event) {
-
-            if (event.target === viewOrderModal) {
-                closeViewModalFunction();
-            }
-        });
-    }
-
-
-    document.addEventListener("keydown", function (event) {
-
-        if (event.key === "Escape") {
-            closeOrderModalFunction();
-            closeViewModalFunction();
+    orderModal?.addEventListener("click", function (event) {
+        if (event.target === orderModal) {
+            event.preventDefault();
+            event.stopPropagation();
         }
     });
 
+    viewOrderModal?.addEventListener("click", function (event) {
+        if (event.target === viewOrderModal) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    });
+
+    /* PREVENT ESCAPE FROM CLOSING MODALS */
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key !== "Escape") return;
+
+        const archive =
+            document.getElementById("printifyArchiveConfirm");
+
+        const anyOpen = [
+            orderModal,
+            viewOrderModal,
+            archive
+        ].some(element => element?.classList.contains("show"));
+
+        if (anyOpen) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    });
 
     /* =====================================================
-       9. CREATE AND UPDATE ORDER
+       10. CREATE AND UPDATE ORDERS
     ===================================================== */
 
-    if (orderForm) {
+    function validateOrderForm() {
+        const name = customerName?.value.trim() || "";
+        const service = printingService?.value || "";
 
-        orderForm.addEventListener("submit", function (event) {
+        const qty = Number(quantity?.value);
+        const price = Number(unitPrice?.value);
+        const paid = Number(amountPaid?.value || 0);
 
-            event.preventDefault();
+        const dateOrdered = orderDate?.value || "";
+        const dateDue = dueDate?.value || "";
 
-            const name = customerName.value.trim();
-            const contact = customerContact.value.trim();
-            const service = printingService.value;
+        if (!name) {
+            showFormError("Please enter the customer name.");
+            customerName?.focus();
+            return false;
+        }
 
-            const qty = Number(quantity.value);
-            const price = Number(unitPrice.value);
+        if (!service) {
+            showFormError("Please select a printing service.");
+            printingService?.focus();
+            return false;
+        }
 
-            const paid = Number(amountPaid.value) || 0;
-            const total = qty * price;
+        if (!Number.isInteger(qty) || qty <= 0) {
+            showFormError("Quantity must be greater than zero.");
+            quantity?.focus();
+            return false;
+        }
 
-            const date = orderDate.value;
-            const due = dueDate.value;
+        if (!Number.isFinite(price) || price <= 0) {
+            showFormError("Price per unit must be greater than zero.");
+            unitPrice?.focus();
+            return false;
+        }
 
-            const status = orderStatus.value;
-            const payment = paymentStatus.value;
+        if (!dateOrdered || !dateDue) {
+            showFormError("Please select the order date and due date.");
+            return false;
+        }
 
-            const notes = orderNotes.value.trim();
+        if (dateDue < dateOrdered) {
+            showFormError(
+                "Due date cannot be earlier than the order date."
+            );
+            dueDate?.focus();
+            return false;
+        }
 
-            if (!name) {
-                showFormError("Please enter the customer's name.");
-                customerName.focus();
-                return;
-            }
+        if (!Number.isFinite(paid) || paid < 0) {
+            showFormError("Amount paid cannot be negative.");
+            amountPaid?.focus();
+            return false;
+        }
 
-            if (!service) {
-                showFormError("Please select a printing service.");
-                printingService.focus();
-                return;
-            }
+        const total = qty * price;
 
-            if (!Number.isInteger(qty) || qty < 1 || qty > 100000) {
-                showFormError("Please enter a valid quantity.");
-                quantity.focus();
-                return;
-            }
+        if (paid > total) {
+            showFormError(
+                "Amount paid cannot exceed the total order amount."
+            );
+            amountPaid?.focus();
+            return false;
+        }
 
-            if (!Number.isFinite(price) || price < 0) {
-                showFormError("Please enter a valid unit price.");
-                unitPrice.focus();
-                return;
-            }
-
-            if (!date || !due) {
-                showFormError("Please provide the order date and due date.");
-                return;
-            }
-
-            if (due < date) {
-                showFormError("Due date cannot be earlier than the order date.");
-                dueDate.focus();
-                return;
-            }
-
-            if (!Number.isFinite(paid) || paid < 0) {
-                showFormError("Please enter a valid amount paid.");
-                amountPaid.focus();
-                return;
-            }
-
-            if (paid > total) {
-                showFormError("Amount paid cannot be greater than the order total.");
-                amountPaid.focus();
-                return;
-            }
-
-            if (payment === "Unpaid" && paid !== 0) {
-                showFormError("Unpaid orders must have an amount paid of ₱0.00.");
-                return;
-            }
-
-            if (payment === "Partially Paid" && (paid <= 0 || paid >= total)) {
-                showFormError("Partially Paid orders must have a payment greater than ₱0 and less than the total.");
-                return;
-            }
-
-            if (payment === "Paid" && paid !== total) {
-                showFormError("For Paid orders, the amount paid must equal the order total.");
-                return;
-            }
-
-            const existingId = editOrderId.value;
-
-            const orderData = {
-                id: existingId || generateOrderId(),
-                customerName: name,
-                customerContact: contact,
-                printingService: service,
-                quantity: qty,
-                unitPrice: price,
-                total: total,
-                orderDate: date,
-                dueDate: due,
-                orderStatus: status,
-                paymentStatus: payment,
-                amountPaid: paid,
-                notes: notes,
-                assignedStaffId: assignedStaff && assignedStaff.value ? assignedStaff.value : null,
-                assignedStaffName: assignedStaff && assignedStaff.value
-                    ? getAssignedStaffName(assignedStaff.value) : "",
-                updatedAt: new Date().toISOString()
-            };
-
-
-            if (existingId) {
-
-                const orderIndex = orders.findIndex(function (order) {
-                    return order.id === existingId;
-                });
-
-                if (orderIndex === -1) {
-                    showFormError("The selected order could not be found.");
-                    return;
-                }
-
-                orderData.createdAt =
-                    orders[orderIndex].createdAt || new Date().toISOString();
-
-                orders[orderIndex] = orderData;
-
-                if (!saveOrders()) {
-                    return;
-                }
-
-                showToast("Order updated successfully.");
-
-            } else {
-
-                orderData.createdAt = new Date().toISOString();
-
-                orders.unshift(orderData);
-
-                if (!saveOrders()) {
-                    orders.shift();
-                    return;
-                }
-
-                showToast("New order created successfully.");
-            }
-
-            renderOrders();
-            closeOrderModalFunction();
-            resetOrderForm();
-        });
+        return true;
     }
 
+    function getOrderFormData() {
+        const qty = Number(quantity.value);
+        const price = Number(unitPrice.value);
+        const paid = Number(amountPaid?.value || 0);
+        const total = qty * price;
+
+        let finalPaymentStatus = "Unpaid";
+
+        if (paid >= total) {
+            finalPaymentStatus = "Paid";
+        } else if (paid > 0) {
+            finalPaymentStatus = "Partially Paid";
+        }
+
+        const staffId = assignedStaff?.value || "";
+        const staffName = getAssignedStaffName(staffId);
+
+        return {
+            customerName: customerName.value.trim(),
+            customerContact: customerContact?.value.trim() || "",
+            printingService: printingService.value,
+            quantity: qty,
+            unitPrice: price,
+            totalAmount: total,
+            orderDate: orderDate.value,
+            dueDate: dueDate.value,
+            status: orderStatus?.value || "Pending",
+            paymentStatus: finalPaymentStatus,
+            amountPaid: paid,
+            assignedStaffId: staffId,
+            assignedStaffName: staffName,
+            notes: orderNotes?.value.trim() || ""
+        };
+    }
+
+    function createNewOrder(data) {
+        const newOrder = {
+            id: generateOrderId(),
+            ...data,
+            archived: false,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        orders.unshift(newOrder);
+
+        if (!saveOrders()) {
+            orders.shift();
+            return false;
+        }
+
+        return true;
+    }
+
+    function updateExistingOrder(orderId, data) {
+        const index = orders.findIndex(function (order) {
+            return String(order.id) === String(orderId);
+        });
+
+        if (index === -1) {
+            showFormError("Order not found. Please refresh the page.");
+            return false;
+        }
+
+        const previousOrder = { ...orders[index] };
+
+        orders[index] = {
+            ...orders[index],
+            ...data,
+            id: previousOrder.id,
+            createdAt: previousOrder.createdAt,
+            updatedAt: new Date().toISOString()
+        };
+
+        if (!saveOrders()) {
+            orders[index] = previousOrder;
+            return false;
+        }
+
+        return true;
+    }
 
     /* =====================================================
-       10. FILTER ORDERS
+       11. SAVE ORDER BUTTON
+    ===================================================== */
+
+    orderForm?.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        if (formMessage) {
+            formMessage.textContent = "";
+            formMessage.classList.remove("show");
+        }
+
+        if (!validateOrderForm()) {
+            return;
+        }
+
+        const data = getOrderFormData();
+
+        const editingId = editOrderId?.value.trim() || "";
+        const isEditing = editingId !== "";
+
+        if (saveOrderButton) {
+            saveOrderButton.disabled = true;
+            saveOrderButton.innerHTML =
+                '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+        }
+
+        try {
+            let success = false;
+
+            if (isEditing) {
+                success = updateExistingOrder(editingId, data);
+            } else {
+                success = createNewOrder(data);
+            }
+
+            if (!success) return;
+
+            closeOrderModalFunction();
+
+            renderOrders();
+
+            showToast(
+                isEditing
+                    ? "Order updated successfully!"
+                    : "New order created successfully!"
+            );
+
+            resetOrderForm();
+
+        } catch (error) {
+            console.error("Order save error:", error);
+
+            showFormError(
+                "Unable to save order: " + error.message
+            );
+
+        } finally {
+            if (saveOrderButton) {
+                saveOrderButton.disabled = false;
+
+                saveOrderButton.innerHTML =
+                    '<i class="fa-solid fa-floppy-disk"></i> Save Order';
+            }
+        }
+    });
+
+    /* =====================================================
+       12. PAYMENT STATUS AUTO UPDATE
+    ===================================================== */
+
+    function updatePaymentStatus() {
+        if (!paymentStatus) return;
+
+        const total = calculateTotal();
+        const paid = Number(amountPaid?.value || 0);
+
+        if (total <= 0 || paid <= 0) {
+            paymentStatus.value = "Unpaid";
+        } else if (paid >= total) {
+            paymentStatus.value = "Paid";
+        } else {
+            paymentStatus.value = "Partially Paid";
+        }
+    }
+
+    amountPaid?.addEventListener("input", updatePaymentStatus);
+
+    quantity?.addEventListener("input", updatePaymentStatus);
+
+    unitPrice?.addEventListener("input", updatePaymentStatus);
+
+    /* =====================================================
+       13. ORDER DATE VALIDATION
+    ===================================================== */
+
+    orderDate?.addEventListener("change", function () {
+        if (!dueDate) return;
+
+        dueDate.min = orderDate.value;
+
+        if (dueDate.value && dueDate.value < orderDate.value) {
+            dueDate.value = orderDate.value;
+        }
+    });
+
+    /* =====================================================
+       END OF PART 5
+    ===================================================== */
+
+    /* =====================================================
+       14. ORDERS TABLE
     ===================================================== */
 
     function getFilteredOrders() {
+        const search = (searchOrders?.value || "")
+            .trim()
+            .toLowerCase();
 
-        const searchText = searchOrders
-            ? searchOrders.value.trim().toLowerCase()
-            : "";
-
-        const selectedStatus = statusFilter
-            ? statusFilter.value
-            : "All";
-
-        const selectedPayment = paymentFilter
-            ? paymentFilter.value
-            : "All";
+        const selectedStatus = statusFilter?.value || "All";
+        const selectedPayment = paymentFilter?.value || "All";
 
         return orders.filter(function (order) {
+            if (order.archived) return false;
 
             const searchableText = [
                 order.id,
                 order.customerName,
                 order.customerContact,
-                order.printingService
+                order.printingService,
+                order.assignedStaffName
             ].join(" ").toLowerCase();
 
             const matchesSearch =
-                !searchText || searchableText.includes(searchText);
+                !search || searchableText.includes(search);
 
             const matchesStatus =
                 selectedStatus === "All" ||
-                order.orderStatus === selectedStatus;
+                order.status === selectedStatus;
 
             const matchesPayment =
                 selectedPayment === "All" ||
                 order.paymentStatus === selectedPayment;
 
-            return matchesSearch && matchesStatus && matchesPayment;
+            return matchesSearch &&
+                matchesStatus &&
+                matchesPayment;
         });
     }
 
-
-    /* =====================================================
-       11. RENDER ORDER TABLE
-    ===================================================== */
-
     function renderOrders() {
-
-        if (!ordersTableBody) {
-            return;
-        }
+        if (!ordersTableBody) return;
 
         const filteredOrders = getFilteredOrders();
 
         ordersTableBody.innerHTML = "";
 
-        filteredOrders.forEach(function (order) {
+        if (recordCount) {
+            recordCount.textContent =
+                filteredOrders.length + " records";
+        }
 
+        if (tableInformation) {
+            tableInformation.textContent =
+                "Showing " + filteredOrders.length + " orders";
+        }
+
+        if (emptyState) {
+            emptyState.hidden = filteredOrders.length > 0;
+        }
+
+        filteredOrders.forEach(function (order) {
             const row = document.createElement("tr");
 
             const initials = getInitials(order.customerName);
-
-            const statusClass = getStatusClass(order.orderStatus);
+            const statusClass = getStatusClass(order.status);
             const paymentClass = getPaymentClass(order.paymentStatus);
 
             row.innerHTML = `
                 <td>
                     <div class="order-id">
                         <strong>${escapeHTML(order.id)}</strong>
-                        <span>${escapeHTML(order.quantity)} item(s)</span>
                     </div>
                 </td>
 
                 <td>
                     <div class="order-customer">
                         <div class="order-customer-avatar">
-                            ${escapeHTML(initials || "C")}
+                            ${escapeHTML(initials)}
                         </div>
 
                         <div class="order-customer-information">
-                            <strong>${escapeHTML(order.customerName)}</strong>
-                            <span>${escapeHTML(order.customerContact || "No contact number")}</span>
+                            <strong>
+                                ${escapeHTML(order.customerName)}
+                            </strong>
+                            <span>
+                                ${escapeHTML(order.customerContact || "No contact")}
+                            </span>
                         </div>
                     </div>
                 </td>
@@ -1038,9 +1138,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 </td>
 
                 <td>
-                    <span class="service-name">
-                        ${escapeHTML(order.assignedStaffName || "Unassigned")}
-                    </span>
+                    ${escapeHTML(order.assignedStaffName || "Unassigned")}
                 </td>
 
                 <td>
@@ -1057,323 +1155,155 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 <td>
                     <strong class="order-price">
-                        ${escapeHTML(formatCurrency(order.total))}
+                        ${escapeHTML(formatCurrency(order.totalAmount))}
                     </strong>
                 </td>
 
                 <td>
-                    <span class="payment-status ${escapeHTML(paymentClass)}">
-                        ${escapeHTML(order.paymentStatus)}
+                    <span class="payment-status ${paymentClass}">
+                        ${escapeHTML(order.paymentStatus || "Unpaid")}
                     </span>
                 </td>
 
                 <td>
-                    <span class="order-status ${escapeHTML(statusClass)}">
-                        ${escapeHTML(order.orderStatus)}
+                    <span class="order-status ${statusClass}">
+                        ${escapeHTML(order.status || "Pending")}
                     </span>
                 </td>
 
                 <td>
                     <div class="order-actions">
-
                         <button
                             type="button"
-                            class="action-button"
-                            data-action="view"
+                            class="action-button view-order"
                             data-id="${escapeHTML(order.id)}"
-                            title="View Order"
-                            aria-label="View order">
-
-                            <i class="fa-regular fa-eye"></i>
+                            title="View Order">
+                            <i class="fa-solid fa-eye"></i>
                         </button>
 
                         <button
                             type="button"
-                            class="action-button"
-                            data-action="edit"
+                            class="action-button edit-order"
                             data-id="${escapeHTML(order.id)}"
-                            title="Edit Order"
-                            aria-label="Edit order">
-
+                            title="Edit Order">
                             <i class="fa-solid fa-pen"></i>
                         </button>
 
                         <button
                             type="button"
-                            class="action-button delete"
-                            data-action="delete"
+                            class="action-button archive archive-order"
                             data-id="${escapeHTML(order.id)}"
-                            title="Delete Order"
-                            aria-label="Delete order">
-
-                            <i class="fa-solid fa-trash"></i>
+                            title="Archive Order">
+                            <i class="fa-solid fa-box-archive"></i>
                         </button>
-
                     </div>
                 </td>
             `;
 
             ordersTableBody.appendChild(row);
         });
-
-
-        // Empty state
-        if (emptyState) {
-            emptyState.hidden = filteredOrders.length !== 0;
-        }
-
-
-        // Record count
-        if (recordCount) {
-            recordCount.textContent =
-                filteredOrders.length + " record(s)";
-        }
-
-
-        // Table information
-        if (tableInformation) {
-            tableInformation.textContent =
-                `Showing ${filteredOrders.length} of ${orders.length} orders`;
-        }
-
-
-        updateStatistics();
-        updateClearSearchButton();
     }
-
 
     /* =====================================================
-       12. UPDATE STATISTICS
+       15. SEARCH AND FILTER EVENTS
     ===================================================== */
 
-    function updateStatistics() {
+    searchOrders?.addEventListener("input", function () {
+        renderOrders();
 
-        const total = orders.length;
-
-        const pending = orders.filter(order =>
-            order.orderStatus === "Pending"
-        ).length;
-
-        const processing = orders.filter(order =>
-            order.orderStatus === "In Progress"
-        ).length;
-
-        const completed = orders.filter(order =>
-            order.orderStatus === "Completed"
-        ).length;
-
-        if (totalOrders) {
-            totalOrders.textContent = total;
+        if (clearSearch) {
+            clearSearch.classList.toggle(
+                "show",
+                searchOrders.value.length > 0
+            );
         }
+    });
 
-        if (pendingOrders) {
-            pendingOrders.textContent = pending;
-        }
-
-        if (processingOrders) {
-            processingOrders.textContent = processing;
-        }
-
-        if (completedOrders) {
-            completedOrders.textContent = completed;
-        }
-    }
-
-
-    /* =====================================================
-       13. SEARCH AND FILTER EVENTS
-    ===================================================== */
-
-    function updateClearSearchButton() {
-
-        if (!clearSearch || !searchOrders) {
-            return;
-        }
-
-        clearSearch.classList.toggle(
-            "show",
-            searchOrders.value.length > 0
-        );
-    }
-
-
-    if (searchOrders) {
-
-        searchOrders.addEventListener("input", function () {
-            renderOrders();
-        });
-    }
-
-
-    if (clearSearch) {
-
-        clearSearch.addEventListener("click", function () {
-
+    clearSearch?.addEventListener("click", function () {
+        if (searchOrders) {
             searchOrders.value = "";
-
-            renderOrders();
             searchOrders.focus();
-        });
-    }
+        }
 
+        clearSearch.classList.remove("show");
+        renderOrders();
+    });
 
-    if (statusFilter) {
-        statusFilter.addEventListener("change", renderOrders);
-    }
+    statusFilter?.addEventListener("change", renderOrders);
+    paymentFilter?.addEventListener("change", renderOrders);
 
-    if (paymentFilter) {
-        paymentFilter.addEventListener("change", renderOrders);
-    }
+    resetFilters?.addEventListener("click", function () {
+        if (searchOrders) searchOrders.value = "";
+        if (statusFilter) statusFilter.value = "All";
+        if (paymentFilter) paymentFilter.value = "All";
 
+        clearSearch?.classList.remove("show");
 
-    if (resetFilters) {
-
-        resetFilters.addEventListener("click", function () {
-
-            if (searchOrders) {
-                searchOrders.value = "";
-            }
-
-            if (statusFilter) {
-                statusFilter.value = "All";
-            }
-
-            if (paymentFilter) {
-                paymentFilter.value = "All";
-            }
-
-            renderOrders();
-
-            showToast("Filters have been reset.");
-        });
-    }
-
+        renderOrders();
+        showToast("Order filters have been reset.");
+    });
 
     /* =====================================================
-       14. VIEW ORDER
+       16. VIEW ORDER
     ===================================================== */
 
-    function viewOrder(id) {
-
-        const order = orders.find(item => item.id === id);
+    function viewOrder(orderId) {
+        const order = orders.find(function (item) {
+            return String(item.id) === String(orderId);
+        });
 
         if (!order) {
             showToast("Order not found.", "error");
             return;
         }
 
-        selectedViewOrderId = id;
+        selectedViewOrderId = order.id;
 
-        const balance = Number(order.total) - Number(order.amountPaid || 0);
+        if (orderDetailsContent) {
+            const details = [
+                ["Order ID", order.id],
+                ["Customer Name", order.customerName],
+                ["Contact Number", order.customerContact || "—"],
+                ["Printing Service", order.printingService],
+                ["Quantity", order.quantity],
+                ["Price per Unit", formatCurrency(order.unitPrice)],
+                ["Total Amount", formatCurrency(order.totalAmount)],
+                ["Amount Paid", formatCurrency(order.amountPaid)],
+                ["Balance", formatCurrency(
+                    Math.max(0,
+                        Number(order.totalAmount || 0) -
+                        Number(order.amountPaid || 0)
+                    )
+                )],
+                ["Order Date", formatDate(order.orderDate)],
+                ["Due Date", formatDate(order.dueDate)],
+                ["Order Status", order.status],
+                ["Payment Status", order.paymentStatus],
+                ["Assigned Staff", order.assignedStaffName || "Unassigned"],
+                ["Order Notes", order.notes || "No notes"]
+            ];
 
-        orderDetailsContent.innerHTML = `
-            <div class="details-heading">
-
-                <div class="details-order-icon">
-                    <i class="fa-solid fa-receipt"></i>
-                </div>
-
-                <div>
-                    <h3>${escapeHTML(order.id)}</h3>
-                    <p>Customer order information</p>
-                </div>
-
-            </div>
-
-            <div class="details-grid">
-
-                <div class="detail-item">
-                    <span>Customer Name</span>
-                    <strong>${escapeHTML(order.customerName)}</strong>
-                </div>
-
-                <div class="detail-item">
-                    <span>Contact Number</span>
-                    <strong>${escapeHTML(order.customerContact || "Not provided")}</strong>
-                </div>
-
-                <div class="detail-item">
-                    <span>Printing Service</span>
-                    <strong>${escapeHTML(order.printingService)}</strong>
-                </div>
-
-                <div class="detail-item">
-                    <span>Assigned Staff</span>
-                    <strong>${escapeHTML(order.assignedStaffName || "Unassigned")}</strong>
-                </div>
-
-                <div class="detail-item">
-                    <span>Quantity</span>
-                    <strong>${escapeHTML(order.quantity)}</strong>
-                </div>
-
-                <div class="detail-item">
-                    <span>Price per Unit</span>
-                    <strong>${escapeHTML(formatCurrency(order.unitPrice))}</strong>
-                </div>
-
-                <div class="detail-item">
-                    <span>Order Date</span>
-                    <strong>${escapeHTML(formatDate(order.orderDate))}</strong>
-                </div>
-
-                <div class="detail-item">
-                    <span>Due Date</span>
-                    <strong>${escapeHTML(formatDate(order.dueDate))}</strong>
-                </div>
-
-                <div class="detail-item">
-                    <span>Order Status</span>
-                    <strong>
-                        <span class="order-status ${escapeHTML(getStatusClass(order.orderStatus))}">
-                            ${escapeHTML(order.orderStatus)}
-                        </span>
-                    </strong>
-                </div>
-
-                <div class="detail-item">
-                    <span>Payment Status</span>
-                    <strong>
-                        <span class="payment-status ${escapeHTML(getPaymentClass(order.paymentStatus))}">
-                            ${escapeHTML(order.paymentStatus)}
-                        </span>
-                    </strong>
-                </div>
-
-                <div class="detail-item">
-                    <span>Amount Paid</span>
-                    <strong>${escapeHTML(formatCurrency(order.amountPaid))}</strong>
-                </div>
-
-                <div class="detail-item">
-                    <span>Remaining Balance</span>
-                    <strong>${escapeHTML(formatCurrency(balance))}</strong>
-                </div>
-
-                <div class="detail-item detail-total">
-                    <span>Order Total</span>
-                    <strong>${escapeHTML(formatCurrency(order.total))}</strong>
-                </div>
-
-                <div class="detail-item full-width">
-                    <span>Order Notes</span>
-                    <strong>${escapeHTML(order.notes || "No additional notes.")}</strong>
-                </div>
-
-            </div>
-        `;
+            orderDetailsContent.innerHTML = details.map(function (detail) {
+                return `
+                    <div class="order-detail-item">
+                        <span>${escapeHTML(detail[0])}</span>
+                        <strong>${escapeHTML(detail[1])}</strong>
+                    </div>
+                `;
+            }).join("");
+        }
 
         openViewModal();
     }
 
-
     /* =====================================================
-       15. EDIT ORDER
+       17. EDIT ORDER
     ===================================================== */
 
-    function editOrder(id) {
-
-        const order = orders.find(item => item.id === id);
+    function editOrder(orderId) {
+        const order = orders.find(function (item) {
+            return String(item.id) === String(orderId);
+        });
 
         if (!order) {
             showToast("Order not found.", "error");
@@ -1382,279 +1312,835 @@ document.addEventListener("DOMContentLoaded", function () {
 
         resetOrderForm();
 
-        editOrderId.value = order.id;
+        if (editOrderId) editOrderId.value = order.id;
 
-        customerName.value = order.customerName || "";
-        customerContact.value = order.customerContact || "";
-        printingService.value = order.printingService || "";
+        if (customerName) {
+            customerName.value = order.customerName || "";
+        }
 
-        quantity.value = order.quantity || 1;
-        unitPrice.value = order.unitPrice || 0;
+        if (customerContact) {
+            customerContact.value = order.customerContact || "";
+        }
 
-        orderDate.value = order.orderDate || getToday();
-        dueDate.value = order.dueDate || getToday();
+        if (printingService) {
+            printingService.value = order.printingService || "";
+        }
 
-        orderStatus.value = order.orderStatus || "Pending";
-        paymentStatus.value = order.paymentStatus || "Unpaid";
+        if (quantity) {
+            quantity.value = order.quantity || 1;
+        }
 
-        amountPaid.value = order.amountPaid || 0;
-        orderNotes.value = order.notes || "";
+        if (unitPrice) {
+            unitPrice.value = order.unitPrice || 0;
+        }
 
-        populateStaffSelect(order.assignedStaffId || "", order.assignedStaffName || "");
+        if (orderDate) {
+            orderDate.value = order.orderDate || getToday();
+        }
+
+        if (dueDate) {
+            dueDate.value = order.dueDate || getToday();
+            dueDate.min = orderDate?.value || getToday();
+        }
+
+        if (orderStatus) {
+            orderStatus.value = order.status || "Pending";
+        }
+
+        if (paymentStatus) {
+            paymentStatus.value = order.paymentStatus || "Unpaid";
+        }
+
+        if (amountPaid) {
+            amountPaid.value = order.amountPaid || 0;
+        }
+
+        if (orderNotes) {
+            orderNotes.value = order.notes || "";
+        }
+
+        populateStaffSelect(
+            order.assignedStaffId,
+            order.assignedStaffName
+        );
 
         calculateTotal();
-
-        closeViewModalFunction();
         openOrderModal(true);
     }
 
+    /* =====================================================
+       18. ORDER ACTION BUTTONS
+    ===================================================== */
 
-    if (editFromViewButton) {
+    ordersTableBody?.addEventListener("click", function (event) {
+        const button = event.target.closest("button[data-id]");
 
-        editFromViewButton.addEventListener("click", function () {
+        if (!button) return;
 
-            if (selectedViewOrderId) {
-                editOrder(selectedViewOrderId);
+        const orderId = button.dataset.id;
+
+        if (button.classList.contains("view-order")) {
+            viewOrder(orderId);
+            return;
+        }
+
+        if (button.classList.contains("edit-order")) {
+            editOrder(orderId);
+            return;
+        }
+
+        if (button.classList.contains("archive-order")) {
+            selectedArchiveOrderId = orderId;
+
+            if (typeof confirmArchiveOrder === "function") {
+                confirmArchiveOrder(orderId);
             }
-        });
-    }
+        }
+    });
+
+    editFromViewButton?.addEventListener("click", function () {
+        if (!selectedViewOrderId) return;
+
+        const orderId = selectedViewOrderId;
+
+        closeViewModalFunction();
+        editOrder(orderId);
+    });
+
+    /* =====================================================
+       END OF PART 6
+    ===================================================== */
 
 
     /* =====================================================
-       16. DELETE ORDER
+       19. ARCHIVE CONFIRMATION MODAL
     ===================================================== */
 
-    function deleteOrder(id) {
+    function ensureArchiveConfirmation() {
+        let overlay = document.getElementById(
+            "printifyArchiveConfirm"
+        );
 
-        const order = orders.find(item => item.id === id);
+        if (overlay) return overlay;
+
+        overlay = document.createElement("div");
+        overlay.id = "printifyArchiveConfirm";
+        overlay.className = "printify-confirm-overlay";
+        overlay.setAttribute("aria-hidden", "true");
+
+        overlay.innerHTML = `
+            <div class="printify-confirm-box"
+                 role="alertdialog"
+                 aria-modal="true"
+                 aria-labelledby="printifyConfirmTitle"
+                 aria-describedby="printifyConfirmMessage">
+
+                <div style="
+                    width:54px;
+                    height:54px;
+                    margin:0 auto 18px;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    border-radius:16px;
+                    color:#19e51b;
+                    background:rgba(25,229,27,.12);
+                    font-size:23px;
+                ">
+                    <i class="fa-solid fa-circle-question"></i>
+                </div>
+
+                <h2 id="printifyConfirmTitle"
+                    style="text-align:center;margin-bottom:12px;">
+                    Confirm Action
+                </h2>
+
+                <p id="printifyConfirmMessage"
+                   style="text-align:center;line-height:1.7;">
+                </p>
+
+                <div style="
+                    display:flex;
+                    justify-content:center;
+                    flex-wrap:wrap;
+                    gap:12px;
+                    margin-top:25px;
+                ">
+                    <button type="button"
+                            id="printifyConfirmCancel"
+                            class="secondary-button">
+                        Cancel
+                    </button>
+
+                    <button type="button"
+                            id="printifyConfirmAccept"
+                            class="primary-button"
+                            style="
+                                padding:11px 20px;
+                                border-radius:10px;
+                                border:0;
+                                font-weight:700;
+                                background:#19e51b;
+                                color:#071007;
+                            ">
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        overlay.querySelector(
+            "#printifyConfirmCancel"
+        ).addEventListener("click", closeArchiveConfirmation);
+
+        overlay.querySelector(
+            "#printifyConfirmAccept"
+        ).addEventListener("click", async function () {
+            if (archiveActionInProgress) return;
+
+            const action = confirmationAction;
+            if (typeof action !== "function") return;
+
+            archiveActionInProgress = true;
+            this.disabled = true;
+
+            try {
+                await action();
+            } catch (error) {
+                console.error("Confirmation error:", error);
+                showToast(
+                    "Unable to complete the action.",
+                    "error"
+                );
+            } finally {
+                archiveActionInProgress = false;
+                this.disabled = false;
+            }
+        });
+
+        // Clicking outside the confirmation does nothing.
+        overlay.addEventListener("click", function (event) {
+            if (event.target === overlay) {
+                event.preventDefault();
+            }
+        });
+
+        return overlay;
+    }
+
+    function openConfirmation(options = {}) {
+        const overlay = ensureArchiveConfirmation();
+
+        const title = overlay.querySelector(
+            "#printifyConfirmTitle"
+        );
+
+        const message = overlay.querySelector(
+            "#printifyConfirmMessage"
+        );
+
+        const accept = overlay.querySelector(
+            "#printifyConfirmAccept"
+        );
+
+        title.textContent =
+            options.title || "Confirm Action";
+
+        message.textContent =
+            options.message || "Do you want to continue?";
+
+        accept.textContent =
+            options.confirmText || "Confirm";
+
+        accept.style.background =
+            options.danger ? "#ff6565" : "#19e51b";
+
+        accept.style.color =
+            options.danger ? "#ffffff" : "#071007";
+
+        confirmationAction =
+            typeof options.onConfirm === "function"
+                ? options.onConfirm
+                : null;
+
+        overlay.classList.add("show");
+        overlay.setAttribute("aria-hidden", "false");
+
+        syncModalScroll();
+        accept.focus();
+    }
+
+    function closeArchiveConfirmation() {
+        const overlay = document.getElementById(
+            "printifyArchiveConfirm"
+        );
+
+        if (!overlay || archiveActionInProgress) return;
+
+        overlay.classList.remove("show");
+        overlay.setAttribute("aria-hidden", "true");
+
+        confirmationAction = null;
+        syncModalScroll();
+    }
+
+    /* =====================================================
+       20. ARCHIVE ORDER
+    ===================================================== */
+
+    function confirmArchiveOrder(orderId) {
+        const order = orders.find(function (item) {
+            return String(item.id) === String(orderId);
+        });
 
         if (!order) {
             showToast("Order not found.", "error");
             return;
         }
 
-        const confirmDelete = confirm(
-            `Are you sure you want to delete ${order.id}?`
+        openConfirmation({
+            title: "Archive Order?",
+            message:
+                "Archive order " + order.id +
+                " for " + order.customerName +
+                "? You can restore it later.",
+            confirmText: "Archive Order",
+            onConfirm: function () {
+                const previousOrders = [...orders];
+                const previousArchived = [...archivedOrders];
+
+                const archivedOrder = {
+                    ...order,
+                    archived: true,
+                    archivedAt: new Date().toISOString()
+                };
+
+                orders = orders.filter(function (item) {
+                    return String(item.id) !== String(orderId);
+                });
+
+                archivedOrders.unshift(archivedOrder);
+
+                try {
+                    localStorage.setItem(
+                        "printifyArchivedOrders",
+                        JSON.stringify(archivedOrders)
+                    );
+
+                    if (!saveOrders()) {
+                        throw new Error("Unable to save orders.");
+                    }
+
+                    closeArchiveConfirmation();
+                    renderOrders();
+                    renderArchivedOrders();
+
+                    showToast("Order archived successfully!");
+                } catch (error) {
+                    orders = previousOrders;
+                    archivedOrders = previousArchived;
+
+                    localStorage.setItem(
+                        "printifyArchivedOrders",
+                        JSON.stringify(archivedOrders)
+                    );
+
+                    showToast(
+                        "Unable to archive order.",
+                        "error"
+                    );
+                }
+            }
+        });
+    }
+
+    /* =====================================================
+       21. ARCHIVED ORDERS STORAGE
+    ===================================================== */
+
+    function loadArchivedOrders() {
+        try {
+            const saved = localStorage.getItem(
+                "printifyArchivedOrders"
+            );
+
+            const parsed = JSON.parse(saved || "[]");
+
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (error) {
+            console.error(
+                "Unable to load archived orders:",
+                error
+            );
+            return [];
+        }
+    }
+
+    archivedOrders = loadArchivedOrders();
+
+    function saveArchivedOrders() {
+        try {
+            localStorage.setItem(
+                "printifyArchivedOrders",
+                JSON.stringify(archivedOrders)
+            );
+
+            return true;
+        } catch (error) {
+            console.error(
+                "Unable to save archived orders:",
+                error
+            );
+            return false;
+        }
+    }
+
+    /* =====================================================
+       22. ARCHIVED ORDERS PANEL
+    ===================================================== */
+
+    function showArchivedOrdersPanel() {
+        const activePanel = document.getElementById(
+            "activeOrdersPanel"
         );
 
-        if (!confirmDelete) {
-            return;
+        if (activePanel) activePanel.hidden = true;
+
+        if (archivedOrdersPanel) {
+            archivedOrdersPanel.hidden = false;
         }
 
-        const previousOrders = [...orders];
+        renderArchivedOrders();
+    }
 
-        orders = orders.filter(item => item.id !== id);
+    function showActiveOrdersPanel() {
+        const activePanel = document.getElementById(
+            "activeOrdersPanel"
+        );
 
-        if (!saveOrders()) {
-            orders = previousOrders;
-            return;
+        if (activePanel) activePanel.hidden = false;
+
+        if (archivedOrdersPanel) {
+            archivedOrdersPanel.hidden = true;
         }
 
         renderOrders();
-
-        showToast("Order deleted successfully.");
     }
 
+    showArchivedOrdersButton?.addEventListener(
+        "click",
+        showArchivedOrdersPanel
+    );
+
+    backToActiveOrdersButton?.addEventListener(
+        "click",
+        showActiveOrdersPanel
+    );
 
     /* =====================================================
-       17. TABLE ACTION EVENTS
+       23. ARCHIVED ORDERS TABLE
     ===================================================== */
 
-    if (ordersTableBody) {
+    function renderArchivedOrders() {
+        if (!archivedOrdersTableBody) return;
 
-        ordersTableBody.addEventListener("click", function (event) {
+        const search = (
+            searchArchivedOrders?.value || ""
+        ).trim().toLowerCase();
 
-            const button = event.target.closest("[data-action]");
-
-            if (!button) {
-                return;
-            }
-
-            const action = button.dataset.action;
-            const id = button.dataset.id;
-
-            if (action === "view") {
-                viewOrder(id);
-            }
-
-            if (action === "edit") {
-                editOrder(id);
-            }
-
-            if (action === "delete") {
-                deleteOrder(id);
-            }
-        });
-    }
-
-
-    /* =====================================================
-       18. CSV EXPORT
-    ===================================================== */
-
-    function getExportRows() {
-
-        const filteredOrders = getFilteredOrders();
-
-        return filteredOrders.map(function (order) {
-
-            return [
+        const filtered = archivedOrders.filter(function (order) {
+            const searchable = [
                 order.id,
                 order.customerName,
-                order.customerContact || "",
                 order.printingService,
-                order.quantity,
-                order.unitPrice,
-                order.orderDate,
-                order.dueDate,
-                order.total,
-                order.amountPaid,
-                Number(order.total) - Number(order.amountPaid || 0),
-                order.paymentStatus,
-                order.orderStatus,
-                order.assignedStaffName || "Unassigned",
-                order.notes || ""
-            ];
+                order.assignedStaffName
+            ].join(" ").toLowerCase();
+
+            return searchable.includes(search);
+        });
+
+        archivedOrdersTableBody.innerHTML = "";
+
+        if (archivedRecordCount) {
+            archivedRecordCount.textContent =
+                filtered.length + " records";
+        }
+
+        if (archivedEmptyState) {
+            archivedEmptyState.hidden = filtered.length > 0;
+        }
+
+        filtered.forEach(function (order) {
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>
+                    <strong style="color:#19e51b;">
+                        ${escapeHTML(order.id)}
+                    </strong>
+                </td>
+
+                <td>
+                    ${escapeHTML(order.customerName)}
+                </td>
+
+                <td>
+                    ${escapeHTML(order.printingService)}
+                </td>
+
+                <td>
+                    ${escapeHTML(
+                        order.assignedStaffName || "Unassigned"
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHTML(formatDate(order.orderDate))}
+                </td>
+
+                <td>
+                    <strong class="order-price">
+                        ${escapeHTML(
+                            formatCurrency(order.totalAmount)
+                        )}
+                    </strong>
+                </td>
+
+                <td>
+                    <span class="payment-status ${getPaymentClass(
+                        order.paymentStatus
+                    )}">
+                        ${escapeHTML(order.paymentStatus)}
+                    </span>
+                </td>
+
+                <td>
+                    <span class="order-status ${getStatusClass(
+                        order.status
+                    )}">
+                        ${escapeHTML(order.status)}
+                    </span>
+                </td>
+
+                <td>
+                    ${escapeHTML(formatDate(order.archivedAt))}
+                </td>
+
+                <td>
+                    <div class="order-actions">
+                        <button
+                            type="button"
+                            class="action-button restore"
+                            data-action="restore"
+                            data-id="${escapeHTML(order.id)}"
+                            title="Restore Order">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="action-button delete"
+                            data-action="delete"
+                            data-id="${escapeHTML(order.id)}"
+                            title="Permanently Delete">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+
+            archivedOrdersTableBody.appendChild(row);
         });
     }
 
-
-    function getExportHeadings() {
-
-        return [
-            "Order ID",
-            "Customer Name",
-            "Contact Number",
-            "Printing Service",
-            "Quantity",
-            "Unit Price",
-            "Order Date",
-            "Due Date",
-            "Total",
-            "Amount Paid",
-            "Remaining Balance",
-            "Payment Status",
-            "Order Status",
-            "Assigned Staff",
-            "Notes"
-        ];
-    }
-
-
-    function getExportFileDate() {
-
-        return getToday();
-    }
-
-
-    if (exportOrdersButton) {
-
-        exportOrdersButton.addEventListener("click", function () {
-
-            const rows = getExportRows();
-
-            if (rows.length === 0) {
-                showToast("There are no orders to export.", "error");
-                return;
-            }
-
-            const csvData = [
-                getExportHeadings(),
-                ...rows
-            ];
-
-            const csvContent = csvData.map(function (row) {
-
-                return row.map(function (value) {
-
-                    let safeValue = String(value ?? "");
-
-                    safeValue = safeValue.replace(/"/g, '""');
-
-                    return `"${safeValue}"`;
-
-                }).join(",");
-
-            }).join("\r\n");
-
-            const blob = new Blob(
-                ["\uFEFF" + csvContent],
-                { type: "text/csv;charset=utf-8;" }
-            );
-
-            const url = URL.createObjectURL(blob);
-
-            const link = document.createElement("a");
-
-            link.href = url;
-            link.download = `Printify_Orders_${getExportFileDate()}.csv`;
-
-            document.body.appendChild(link);
-
-            link.click();
-            link.remove();
-
-            URL.revokeObjectURL(url);
-
-            showToast("CSV file exported successfully.");
-        });
-    }
-
+    searchArchivedOrders?.addEventListener(
+        "input",
+        renderArchivedOrders
+    );
 
     /* =====================================================
-       19. EXCEL EXPORT
+       24. RESTORE ORDER
     ===================================================== */
 
-    if (exportExcelButton) {
+    function confirmRestoreOrder(orderId) {
+        const order = archivedOrders.find(function (item) {
+            return String(item.id) === String(orderId);
+        });
 
-        exportExcelButton.addEventListener("click", function () {
+        if (!order) {
+            showToast("Archived order not found.", "error");
+            return;
+        }
 
-            if (typeof XLSX === "undefined") {
+        openConfirmation({
+            title: "Restore Order?",
+            message:
+                "Restore order " + order.id +
+                " to the active orders list?",
+            confirmText: "Restore Order",
+            onConfirm: function () {
+                const previousOrders = [...orders];
+                const previousArchived = [...archivedOrders];
 
-                showToast(
-                    "Excel library is unavailable. Check your internet connection.",
-                    "error"
+                const restoredOrder = {
+                    ...order,
+                    archived: false,
+                    archivedAt: null,
+                    updatedAt: new Date().toISOString()
+                };
+
+                archivedOrders = archivedOrders.filter(
+                    function (item) {
+                        return String(item.id) !== String(orderId);
+                    }
                 );
 
-                return;
+                orders.unshift(restoredOrder);
+
+                if (!saveArchivedOrders() || !saveOrders()) {
+                    orders = previousOrders;
+                    archivedOrders = previousArchived;
+                    saveArchivedOrders();
+
+                    showToast(
+                        "Unable to restore order.",
+                        "error"
+                    );
+                    return;
+                }
+
+                closeArchiveConfirmation();
+                renderArchivedOrders();
+                renderOrders();
+
+                showToast("Order restored successfully!");
             }
+        });
+    }
 
-            const rows = getExportRows();
+    /* =====================================================
+       25. PERMANENT DELETE
+    ===================================================== */
 
-            if (rows.length === 0) {
-                showToast("There are no orders to export.", "error");
-                return;
+    function confirmDeleteArchivedOrder(orderId) {
+        const order = archivedOrders.find(function (item) {
+            return String(item.id) === String(orderId);
+        });
+
+        if (!order) {
+            showToast("Archived order not found.", "error");
+            return;
+        }
+
+        openConfirmation({
+            title: "Permanently Delete Order?",
+            message:
+                "You are about to permanently delete order " +
+                order.id +
+                ". This cannot be undone.",
+            confirmText: "Delete Permanently",
+            danger: true,
+            onConfirm: function () {
+                const previousArchived = [...archivedOrders];
+
+                archivedOrders = archivedOrders.filter(
+                    function (item) {
+                        return String(item.id) !== String(orderId);
+                    }
+                );
+
+                if (!saveArchivedOrders()) {
+                    archivedOrders = previousArchived;
+
+                    showToast(
+                        "Unable to delete order.",
+                        "error"
+                    );
+                    return;
+                }
+
+                closeArchiveConfirmation();
+                renderArchivedOrders();
+
+                showToast(
+                    "Archived order permanently deleted."
+                );
             }
+        });
+    }
 
-            const worksheetData = [
-                getExportHeadings(),
-                ...rows
-            ];
+    /* =====================================================
+       26. ARCHIVED ORDER BUTTONS
+    ===================================================== */
 
-            const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    archivedOrdersTableBody?.addEventListener(
+        "click",
+        function (event) {
+            const button = event.target.closest(
+                "button[data-action][data-id]"
+            );
+
+            if (!button) return;
+
+            const orderId = button.dataset.id;
+            const action = button.dataset.action;
+
+            if (action === "restore") {
+                confirmRestoreOrder(orderId);
+            } else if (action === "delete") {
+                confirmDeleteArchivedOrder(orderId);
+            }
+        }
+    );
+
+    /* =====================================================
+       END OF PART 7
+    ===================================================== */
+
+    /* =====================================================
+       27. EXPORT HELPERS
+    ===================================================== */
+
+    function getExportData() {
+        return getFilteredOrders().map(function (order) {
+            return {
+                "Order ID": order.id || "",
+                "Customer Name": order.customerName || "",
+                "Contact Number": order.customerContact || "",
+                "Printing Service": order.printingService || "",
+                "Quantity": Number(order.quantity) || 0,
+                "Price per Unit": Number(order.unitPrice) || 0,
+                "Total Amount": Number(order.totalAmount) || 0,
+                "Amount Paid": Number(order.amountPaid) || 0,
+                "Balance": Math.max(
+                    0,
+                    (Number(order.totalAmount) || 0) -
+                    (Number(order.amountPaid) || 0)
+                ),
+                "Assigned Staff": order.assignedStaffName || "Unassigned",
+                "Order Date": order.orderDate || "",
+                "Due Date": order.dueDate || "",
+                "Order Status": order.status || "",
+                "Payment Status": order.paymentStatus || "",
+                "Notes": order.notes || ""
+            };
+        });
+    }
+
+    function getExportFilename(extension) {
+        return "Printify_Orders_" + getToday() + "." + extension;
+    }
+
+    function downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        link.href = url;
+        link.download = filename;
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setTimeout(function () {
+            URL.revokeObjectURL(url);
+        }, 1000);
+    }
+
+    /* =====================================================
+       28. EXPORT CSV
+    ===================================================== */
+
+    function escapeCSV(value) {
+        let text = String(value ?? "");
+
+        // Prevent spreadsheet formula execution.
+        if (/^[\s]*[=+\-@]/.test(text)) {
+            text = "'" + text;
+        }
+
+        return '"' + text.replace(/"/g, '""') + '"';
+    }
+
+    function exportOrdersCSV() {
+        const data = getExportData();
+
+        if (data.length === 0) {
+            showToast("No orders available to export.", "error");
+            return;
+        }
+
+        const headers = Object.keys(data[0]);
+
+        const rows = [
+            headers.map(escapeCSV).join(","),
+            ...data.map(function (item) {
+                return headers.map(function (header) {
+                    return escapeCSV(item[header]);
+                }).join(",");
+            })
+        ];
+
+        const csv = "\uFEFF" + rows.join("\r\n");
+
+        const blob = new Blob([csv], {
+            type: "text/csv;charset=utf-8;"
+        });
+
+        downloadBlob(blob, getExportFilename("csv"));
+
+        showToast("Orders exported to CSV successfully!");
+    }
+
+    exportOrdersButton?.addEventListener(
+        "click",
+        exportOrdersCSV
+    );
+
+    /* =====================================================
+       29. EXPORT EXCEL
+    ===================================================== */
+
+    function exportOrdersExcel() {
+        const data = getExportData();
+
+        if (data.length === 0) {
+            showToast("No orders available to export.", "error");
+            return;
+        }
+
+        if (typeof XLSX === "undefined") {
+            showToast(
+                "Excel library is not available. Please check your internet connection.",
+                "error"
+            );
+            return;
+        }
+
+        try {
+            const workbook = XLSX.utils.book_new();
+
+            const worksheet = XLSX.utils.json_to_sheet(data);
 
             worksheet["!cols"] = [
-                { wch: 15 },
+                { wch: 16 },
                 { wch: 25 },
                 { wch: 18 },
-                { wch: 24 },
+                { wch: 25 },
                 { wch: 12 },
-                { wch: 15 },
+                { wch: 16 },
+                { wch: 18 },
+                { wch: 18 },
+                { wch: 18 },
+                { wch: 25 },
                 { wch: 16 },
                 { wch: 16 },
-                { wch: 16 },
-                { wch: 16 },
-                { wch: 19 },
-                { wch: 20 },
+                { wch: 18 },
                 { wch: 18 },
                 { wch: 35 }
             ];
-
-            worksheet["!autofilter"] = {
-                ref: worksheet["!ref"]
-            };
-
-            const workbook = XLSX.utils.book_new();
 
             XLSX.utils.book_append_sheet(
                 workbook,
@@ -1664,51 +2150,86 @@ document.addEventListener("DOMContentLoaded", function () {
 
             XLSX.writeFile(
                 workbook,
-                `Printify_Orders_${getExportFileDate()}.xlsx`
+                getExportFilename("xlsx")
             );
 
-            showToast("Excel file exported successfully.");
-        });
+            showToast("Orders exported to Excel successfully!");
+
+        } catch (error) {
+            console.error("Excel export error:", error);
+
+            showToast(
+                "Unable to export Excel file.",
+                "error"
+            );
+        }
     }
 
+    exportExcelButton?.addEventListener(
+        "click",
+        exportOrdersExcel
+    );
 
     /* =====================================================
-       20. INITIALIZE PAGE
+       30. INITIALIZE ORDERS PAGE
     ===================================================== */
 
-    renderOrders();
+    function initializeOrdersPage() {
+        try {
+            // Load archived orders from browser storage.
+            archivedOrders = loadArchivedOrders();
 
-    resetOrderForm();
+            // Initialize form defaults.
+            resetOrderForm();
 
-
-    /* =====================================================
-       21. LIVE REFRESH
-       Kapag nag-update ng status ang Staff, lalabas dito
-       nang hindi kailangang i-refresh ang page.
-    ===================================================== */
-
-    setInterval(function () {
-
-        if (!window.PrintifyAPI || document.hidden) {
-            return;
-        }
-
-        const modalOpen =
-            (orderModal && orderModal.classList.contains("show")) ||
-            (viewOrderModal && viewOrderModal.classList.contains("show"));
-
-        if (modalOpen) {
-            return;
-        }
-
-        const fresh = window.PrintifyAPI.fetchOrders();
-        const staff = window.PrintifyAPI.fetchStaff();
-
-        if (fresh && JSON.stringify(fresh) !== JSON.stringify(orders)) {
-            orders = fresh;
+            // Render the active orders table.
             renderOrders();
+
+            // Prepare the archived orders table.
+            renderArchivedOrders();
+
+            // Ensure modal overlays are initially hidden.
+            if (orderModal) {
+                orderModal.classList.remove("show");
+                orderModal.setAttribute("aria-hidden", "true");
+            }
+
+            if (viewOrderModal) {
+                viewOrderModal.classList.remove("show");
+                viewOrderModal.setAttribute("aria-hidden", "true");
+            }
+
+            const archiveConfirmation =
+                document.getElementById("printifyArchiveConfirm");
+
+            if (archiveConfirmation) {
+                archiveConfirmation.classList.remove("show");
+                archiveConfirmation.setAttribute(
+                    "aria-hidden",
+                    "true"
+                );
+            }
+
+            syncModalScroll();
+
+            console.log("Printify Orders page initialized.");
+
+        } catch (error) {
+            console.error(
+                "Printify Orders initialization error:",
+                error
+            );
+
+            showToast(
+                "Unable to initialize the Orders page.",
+                "error"
+            );
         }
+    }
 
-    }, 15000);
+    initializeOrdersPage();
 
-});
+}); 
+
+
+

@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="css/staff-dashboard.css">
     <link rel="stylesheet" href="css/staff-pages.css">
+    <link rel="stylesheet" href="css/staff-settings.css">
     <script src="js/staff-common.js" defer></script>
     <script src="js/staff-settings.js" defer></script>
 </head>
@@ -16,104 +17,64 @@
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <a href="staff-dashboard.html" class="logo"><span>Printify</span></a>
+            <a href="staff-dashboard.html" class="logo"><img src="image/printify_logo.png" alt="" class="settings-brand-logo"><span>Printify</span></a>
         </div>
         <div class="sidebar-label">WORKSPACE</div>
         <nav class="sidebar-navigation">
-            <a href="staff-dashboard.html" class="nav-link">Dashboard</a>
-            <a href="staff-orders.html" class="nav-link">My Orders</a>
-            <a href="staff-attendance.html" class="nav-link">Attendance</a>
-            <a href="staff-notifications.html" class="nav-link">Notifications</a>
+            <a href="staff-dashboard.html" class="nav-link"><i class="fa-solid fa-chart-line settings-nav-icon"></i><span>Dashboard</span></a>
+            <a href="staff-orders.html" class="nav-link"><i class="fa-solid fa-receipt settings-nav-icon"></i><span>My Orders</span></a>
+            <a href="staff-attendance.html" class="nav-link"><i class="fa-solid fa-square-check settings-nav-icon"></i><span>Attendance</span></a>
+            <a href="staff-notifications.html" class="nav-link"><i class="fa-solid fa-bell settings-nav-icon"></i><span>Notifications</span></a>
         </nav>
         <div class="sidebar-label settings-label">PERSONAL</div>
         <nav class="sidebar-navigation">
-            <a href="staff-profile.html" class="nav-link">My Profile</a>
-            <a href="staff-settings.html" class="nav-link active">Settings</a>
+            <a href="staff-profile.html" class="nav-link"><i class="fa-solid fa-circle-user settings-nav-icon"></i><span>My Profile</span></a>
+            <a href="staff-settings.html" class="nav-link active" aria-current="page"><i class="fa-solid fa-gear settings-nav-icon"></i><span>Settings</span></a>
         </nav>
         <div class="sidebar-bottom">
             <div class="sidebar-account">
                 <div class="account-avatar" data-staff-initials>S</div>
-                <div class="account-details">
-                    <strong data-staff-name>Staff Member</strong>
-                    <span>Staff Account</span>
-                </div>
+                <div class="account-details"><strong data-staff-name>Staff Member</strong><span>Staff Account</span></div>
             </div>
-            <button class="sidebar-logout" id="sidebarLogoutButton" type="button">Log Out</button>
-            <div class="sidebar-footer">
-                <span>PRINTIFY CALAPAN</span>
-                <span>© <span data-current-year></span></span>
-            </div>
+            <button class="sidebar-logout" id="sidebarLogoutButton" type="button"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+            <div class="sidebar-footer"><span>PRINTIFY CALAPAN</span><span>© <span data-current-year></span></span></div>
         </div>
     </aside>
     <main class="main-content">
         <header class="topbar">
             <div class="topbar-left">
-                <button class="icon-button menu-button" id="menuToggle" type="button" aria-label="Toggle sidebar">
-                    <i class="fa-solid fa-bars"></i>
-                </button>
-                <div class="page-heading">
-                    <h1>Settings</h1>
-                    <p>Manage your account preferences.</p>
-                </div>
+                <button class="icon-button menu-button" id="menuToggle" type="button" aria-label="Toggle sidebar"><i class="fa-solid fa-bars"></i></button>
+                <div class="page-heading"><h1>Settings</h1><p>Manage your account preferences.</p></div>
             </div>
             <div class="topbar-right">
                 <span id="currentDate"></span>
-                <button class="icon-button" id="themeToggle" type="button" aria-label="Toggle theme">
-                    <i class="fa-solid fa-circle-half-stroke"></i>
-                </button>
-                <button class="icon-button" id="notificationButton" type="button" aria-label="Notifications">
-                    <i class="fa-regular fa-bell"></i>
-                </button>
-                <button class="icon-button" id="logoutButton" type="button" aria-label="Log out">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                </button>
+                <button class="icon-button theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme"><i class="fa-solid fa-circle-half-stroke"></i></button>
+                <button class="icon-button" id="notificationButton" type="button" aria-label="Notifications"><i class="fa-regular fa-bell"></i></button>
+                <button class="icon-button" id="logoutButton" type="button" aria-label="Log out"><i class="fa-solid fa-right-from-bracket"></i></button>
             </div>
         </header>
-        <section class="dashboard-content staff-page-content">
-            <div class="content-introduction">
-                <div>
-                    <h2>Appearance</h2>
-                    <p>Choose your preferred display theme.</p>
-                </div>
-            </div>
-            <section class="panel staff-page-panel">
-                <div class="staff-page-field">
-                    <label for="themeSelect">Theme</label>
-                    <select id="themeSelect">
-                        <option value="dark">Dark</option>
-                        <option value="light">Light</option>
-                    </select>
-                </div>
+        <section class="dashboard-content staff-page-content settings-page-content">
+            <nav class="settings-breadcrumb" aria-label="Breadcrumb"><a href="staff-dashboard.html">Staff Workspace</a><i class="fa-solid fa-chevron-right" aria-hidden="true"></i><span aria-current="page">Settings</span></nav>
+            <div class="content-introduction"><div><h2>Appearance</h2><p>Choose your preferred display theme.</p></div><span class="settings-section-badge"><i class="fa-solid fa-circle"></i> Account Preferences</span></div>
+            <section class="panel staff-page-panel settings-panel">
+                <div class="settings-panel-heading"><div><h2><i class="fa-solid fa-palette"></i> Display Preferences</h2><p>Customize how Printify looks on your screen.</p></div></div>
+                <div class="staff-page-field"><label for="themeSelect">Theme</label><select id="themeSelect"><option value="dark">Dark</option><option value="light">Light</option></select></div>
                 <p class="staff-page-message" id="settingsMessage" role="status" aria-live="polite"></p>
             </section>
-            <div class="content-introduction">
-                <div>
-                    <h2>Change Password</h2>
-                    <p>Use a strong password that you have not used elsewhere.</p>
-                </div>
-            </div>
-            <section class="panel staff-page-panel">
+            <div class="content-introduction"><div><h2>Change Password</h2><p>Use a strong password that you have not used elsewhere.</p></div></div>
+            <section class="panel staff-page-panel settings-panel">
+                <div class="settings-panel-heading"><div><h2><i class="fa-solid fa-lock"></i> Account Security</h2><p>Update your password to keep your account secure.</p></div></div>
                 <form id="passwordForm">
                     <div class="staff-page-fields">
-                        <div class="staff-page-field full-width">
-                            <label for="currentPassword">Current Password</label>
-                            <input id="currentPassword" name="currentPassword" type="password" autocomplete="current-password" required>
-                        </div>
-                        <div class="staff-page-field">
-                            <label for="newPassword">New Password</label>
-                            <input id="newPassword" name="newPassword" type="password" autocomplete="new-password" minlength="8" required>
-                        </div>
-                        <div class="staff-page-field">
-                            <label for="confirmPassword">Confirm New Password</label>
-                            <input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required>
-                        </div>
+                        <div class="staff-page-field full-width"><label for="currentPassword">Current Password</label><input id="currentPassword" name="currentPassword" type="password" autocomplete="current-password" required></div>
+                        <div class="staff-page-field"><label for="newPassword">New Password</label><input id="newPassword" name="newPassword" type="password" autocomplete="new-password" minlength="8" required></div>
+                        <div class="staff-page-field"><label for="confirmPassword">Confirm New Password</label><input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required></div>
                     </div>
-                    <div class="staff-page-actions">
-                        <button class="staff-page-button" id="changePasswordButton" type="submit">Update Password</button>
-                    </div>
+                    <div class="staff-page-actions"><button class="staff-page-button" id="changePasswordButton" type="submit"><i class="fa-solid fa-shield-halved"></i> Update Password</button></div>
                     <p class="staff-page-message" id="passwordMessage" role="status" aria-live="polite"></p>
                 </form>
             </section>
+            <footer class="settings-footer"><span>© <span data-current-year></span> Printify Calapan • DJJ Computer Shop</span><span><i class="fa-solid fa-circle"></i> Staff Workspace</span></footer>
         </section>
     </main>
 </body>

@@ -1820,3 +1820,164 @@ body.dark-mode .tracking-modal {
         right: -5px !important;
     }
 }
+
+/* SCAN QR CODE — SOFTER BACKGROUND BLUR */
+#qrModal {
+    background: rgba(0, 0, 0, 0.30) !important;
+    backdrop-filter: blur(3px) !important;
+    -webkit-backdrop-filter: blur(3px) !important;
+}
+
+/* KEEP QR SCANNER POPUP CLEAR */
+#qrModal .modal-content,
+#qrModal .qr-modal-content {
+    filter: none !important;
+    opacity: 1 !important;
+}
+
+/* NOTIFICATIONS — SOFTER BACKGROUND BLUR */
+.swal2-container {
+    backdrop-filter: blur(3px) !important;
+    -webkit-backdrop-filter: blur(3px) !important;
+}
+
+.swal2-container.swal2-backdrop-show {
+    background: rgba(0, 0, 0, 0.30) !important;
+}
+
+/* KEEP NOTIFICATION POPUP CLEAR */
+.swal2-popup {
+    filter: none !important;
+    opacity: 1 !important;
+}
+
+/* ==========================================
+   PRINTIFY STAFF TRACKING SIDEBAR FIX
+   MATCH STAFF MANAGEMENT / DASHBOARD.CSS
+========================================== */
+
+@media (min-width: 851px) {
+    #sidebar {
+        width: 255px !important;
+        min-width: 255px !important;
+        max-width: 255px !important;
+        padding: 25px 17px !important;
+        box-sizing: border-box !important;
+    }
+}
+
+/* Logo and header */
+#sidebar .sidebar-header {
+    width: auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 0 8px 30px !important;
+    margin: 0 !important;
+    display: block !important;
+    overflow: visible !important;
+}
+
+/* Navigation container */
+#sidebar .sidebar-navigation {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 7px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Sidebar buttons */
+#sidebar .nav-link {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+
+    width: 100% !important;
+    min-height: 46px !important;
+    height: auto !important;
+
+    padding: 12px 13px !important;
+    margin: 0 !important;
+    gap: 13px !important;
+
+    box-sizing: border-box !important;
+    border-radius: 12px !important;
+
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    line-height: normal !important;
+}
+
+/* Icons */
+#sidebar .nav-link .menu-icon {
+    width: 23px !important;
+    height: 23px !important;
+    flex-shrink: 0 !important;
+    object-fit: contain !important;
+}
+
+#sidebar .nav-link i {
+    width: 23px !important;
+    text-align: center !important;
+    flex-shrink: 0 !important;
+}
+
+/* Keep active button aligned */
+#sidebar .nav-link.active,
+#sidebar .nav-link:hover {
+    transform: none !important;
+}
+
+/* Preserve mobile sidebar behavior */
+@media (max-width: 850px) {
+    #sidebar {
+        width: min(285px, 85vw) !important;
+        min-width: 0 !important;
+        max-width: none !important;
+    }
+}
+
+/* PRINTIFY NAME */
+#sidebar .logo-text,
+#sidebar .brand-name,
+#sidebar .sidebar-header h1 {
+    font-size: 30px !important;
+    font-weight: 800 !important;
+    line-height: 1.3 !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* MAIN MENU LABEL */
+#sidebar .sidebar-label {
+    font-size: 12px !important;
+    font-weight: 750 !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
+}
+
+/* NO CHANGES TO SIDEBAR BUTTONS OR LOGO IMAGE */
+
+/* MAIN MENU — ALIGN LIKE INVENTORY */
+
+#sidebar .sidebar-label {
+    font-size: 10px !important;
+    font-weight: 750 !important;
+    letter-spacing: 0.5px !important;
+
+    margin-left: -9px !important;
+    padding-left: 11px !important;
+}
+
+/* FIX SIDEBAR LOGOUT CLICK */
+
+#sidebar {
+    pointer-events: auto;
+}
+
+#sidebar #logoutButton,
+#sidebar #logoutBtn {
+    position: relative !important;
+    z-index: 100 !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}

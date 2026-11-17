@@ -9,22 +9,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const API_URL = "/api/auth/register";
 
-    // Keep the registration page visible; explain when Admin registration is closed.
-    fetch("/api/auth/admin-registration-status", { cache: "no-store" })
-        .then(response => response.ok ? response.json() : null)
-        .then(data => {
-            if (data && !data.available) {
-                const message = document.getElementById("registerMessage");
-                const button = document.getElementById("registerButton");
-                if (message) {
-                    message.textContent = "An Admin account already exists. Registration is closed until that account is removed.";
-                    message.classList.add("error");
-                }
-                if (button) button.disabled = true;
-            }
-        })
-        .catch(() => {});
-
     // ELEMENTS
     const registerForm = document.getElementById("registerForm");
 
@@ -332,7 +316,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         registerButtonText.textContent = isLoading
             ? "Creating Account..."
-            : "Register as Admin";
+            : "Create Account";
 
     }
 
@@ -418,22 +402,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
 
-            // SUCCESS - email verification is required before account creation
-            if (data.verificationRequired) {
-                const code = window.prompt("Enter the 6-digit verification code sent to " + email.value.trim());
-                if (!code) {
-                    registerMessage.textContent = "Verification pending. Register again after one minute to request a new code.";
-                    registerMessage.classList.add("error");
-                    return;
-                }
-                const verifyResponse = await fetch("/api/auth/verify-email", {
-                    method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email: email.value.trim(), code: code.trim() })
-                });
-                const verification = await verifyResponse.json();
-                if (!verifyResponse.ok) throw new Error(verification.message || "Verification failed.");
-                data.message = verification.message;
-            }
+            // SUCCESS
 
             registerMessage.textContent =
                 data.message || "Account created successfully.";
@@ -475,7 +444,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // 8. TERMS AND CONDITIONS
     // ==========================================
 
-    document.querySelector(".terms-label a")?.addEventListener("click", function (event) {
+    document.getElementById("termsLink").addEventListener("click", function (event) {
 
         event.preventDefault();
 

@@ -548,4 +548,86 @@ document.addEventListener("DOMContentLoaded", function () {
 
     });
 
+
+    // ==========================================
+    // 11. STAFF DASHBOARD INITIAL STATE + SUMMARY
+    // ADDED ONLY: existing handlers above remain unchanged.
+    // ==========================================
+
+    // Start with sidebar visible, including if an old HTML file has sidebar-hidden.
+    body.classList.remove("sidebar-hidden");
+    if (sidebar) sidebar.classList.remove("is-hidden");
+    if (sidebarOverlay) sidebarOverlay.classList.remove("show");
+
+    const summaryWrite = (id, value) => {
+        const target = document.getElementById(id);
+        if (target) target.textContent = String(value);
+    };
+    const summaryNormalize = value => String(value || "").trim().toLowerCase();
+    const summaryDateKey = date =>
+        [date.getFullYear(), String(date.getMonth() + 1).padStart(2, "0"),
+            String(date.getDate()).padStart(2, "0")].join("-");
+
+    function summaryIsToday(value) {
+        const raw = String(value || "").trim();
+        if (!raw) return false;
+        if (/\btoday\b/i.test(raw)) return true;
+        const current = summaryDateKey(new Date());
+        if (raw.includes(current)) return true;
+        const parsed = new Date(raw);
+        return !Number.isNaN(parsed.getTime()) && summaryDateKey(parsed) === current;
+    }
+
+    function refreshStaffSummary() {
+        // Counts only rows currently supplied to this staff's table.
+        // For database-wide accurate totals, a staff-scoped summary API is needed.
+        const table = document.getElementById("myOrdersBody");
+        if (!table) return;
+        const rows = Array.from(table.querySelectorAll("tr")).filter(row =>
+            row.querySelectorAll("td").length >= 5 &&
+            !row.querySelector(".empty-table, [colspan]")
+        );
+        let pending = 0;
+        let completedToday = 0;
+        rows.forEach(row => {
+            const cells = row.querySelectorAll("td");
+            const status = summaryNormalize(cells[3]?.textContent);
+            const orderDate = cells[4]?.textContent || "";
+            if (/pending|processing|in progress|in-progress|queued|assigned/.test(status)) pending++;
+            if (/completed|complete|done|finished/.test(status) && summaryIsToday(orderDate)) completedToday++;
+        });
+        summaryWrite("assignedOrders", rows.length);
+        summaryWrite("pendingTasks", pending);
+        summaryWrite("completedToday", completedToday);
+    }
+
+    function refreshStaffAttendance() {
+        const badge = document.getElementById("todayAttendanceBadge");
+        const text = badge?.textContent?.trim();
+        if (text && !/^(loading|please wait|--|status)$/i.test(text)) {
+            summaryWrite("attendanceStatus", text);
+        }
+    }
+
+    // Staff orders and attendance can arrive asynchronously from other scripts.
+    if (myOrdersBody) {
+        let scheduled = false;
+        new MutationObserver(() => {
+            if (scheduled) return;
+            scheduled = true;
+            queueMicrotask(() => {
+                scheduled = false;
+                refreshStaffSummary();
+            });
+        }).observe(myOrdersBody, { childList: true, subtree: true, characterData: true });
+        refreshStaffSummary();
+    }
+
+    const attendanceBadge = document.getElementById("todayAttendanceBadge");
+    if (attendanceBadge) {
+        new MutationObserver(refreshStaffAttendance).observe(attendanceBadge,
+            { childList: true, subtree: true, characterData: true });
+        refreshStaffAttendance();
+    }
+
 });

@@ -7,6 +7,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const body = document.body;
 
+    // Keep the sidebar open when the My Orders page first loads.
+    if (window.innerWidth > 900) body.classList.remove("sidebar-hidden");
+
     const sidebar = document.getElementById("sidebar");
     const sidebarOverlay = document.getElementById("sidebarOverlay");
     const menuToggle = document.getElementById("menuToggle");

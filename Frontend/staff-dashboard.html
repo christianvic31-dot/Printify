@@ -22,7 +22,7 @@
     <script src="js/staff-dashboard-orders.js" defer></script>
 </head>
 
-<body class="sidebar-hidden">
+<body>
 
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
@@ -197,6 +197,13 @@
         <!-- DASHBOARD -->
         <section class="dashboard-content">
 
+            <!-- STAFF DASHBOARD BREADCRUMB -->
+            <nav class="staff-breadcrumb" aria-label="Breadcrumb">
+                <span class="staff-breadcrumb-parent">Staff Workspace</span>
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                <span class="staff-breadcrumb-current" aria-current="page">Dashboard</span>
+            </nav>
+
             <!-- INTRODUCTION -->
             <div class="content-introduction">
 
@@ -216,7 +223,7 @@
             <!-- STATISTICS -->
             <div class="stats-grid">
 
-                <article class="stat-card">
+                <a class="stat-card" href="staff-orders.html">
                     <div class="stat-card-top">
                         <div class="stat-icon customers-icon">
                             <img src="image/working_icon.png" alt="">
@@ -232,9 +239,9 @@
                             <img src="image/order_icon2.png" alt="">
                         </div>
                     </div>
-                </article>
+                </a>
 
-                <article class="stat-card">
+                <a class="stat-card" href="staff-orders.html">
                     <div class="stat-card-top">
                         <div class="stat-icon orders-icon">
                             <img src="image/pending_icon.png" alt="">
@@ -250,9 +257,9 @@
                             <i class="fa-solid fa-hourglass-half"></i>
                         </div>
                     </div>
-                </article>
+                </a>
 
-                <article class="stat-card">
+                <a class="stat-card" href="staff-orders.html">
                     <div class="stat-card-top">
                         <div class="stat-icon sales-icon">
                             <img src="image/completed_icon.png" alt="">
@@ -268,9 +275,9 @@
                             <i class="fa-solid fa-circle-check"></i>
                         </div>
                     </div>
-                </article>
+                </a>
 
-                <article class="stat-card">
+                <a class="stat-card" href="staff-attendance.html">
                     <div class="stat-card-top">
                         <div class="stat-icon staff-icon">
                             <img src="image/attendance_icon.png" alt="">
@@ -286,7 +293,7 @@
                             <i class="fa-solid fa-clock"></i>
                         </div>
                     </div>
-                </article>
+                </a>
 
             </div>
 

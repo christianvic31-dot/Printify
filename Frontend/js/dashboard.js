@@ -1,3 +1,4 @@
+
 /* =====================================================
    PRINTIFY - ADMIN DASHBOARD CONTROLLER
 ===================================================== */
@@ -516,43 +517,36 @@ document.addEventListener("DOMContentLoaded", function () {
     ================================================= */
 
     /*
-       Expected API data format:
+       Actual backend response:
 
-       summary.salesChart = {
-           daily: [
-               { label: "12 AM", total: 100 },
-               { label: "1 AM", total: 200 }
-           ],
-
-           weekly: [
-               { label: "Monday", total: 500 },
-               { label: "Tuesday", total: 700 }
-           ],
-
-           monthly: [
-               { label: "Week 1", total: 1500 },
-               { label: "Week 2", total: 2000 }
-           ],
-
-           yearly: [
-               { label: "January", total: 5000 },
-               { label: "February", total: 7000 }
-           ]
+       summary.sales = {
+           daily: {
+               labels: [...],
+               values: [...]
+           },
+           weekly: {
+               labels: [...],
+               values: [...]
+           },
+           monthly: {
+               labels: [...],
+               values: [...]
+           },
+           yearly: {
+               labels: [...],
+               values: [...]
+           }
        }
-
-       IMPORTANT:
-       The backend must return the actual salesChart.daily data.
-       This JavaScript does not create or invent sales figures.
     */
 
 
-    /* Automatically add Daily option if missing */
+    /* DAILY DEFAULT */
 
     function ensureDailySalesOption() {
         if (!salesPeriod) return;
 
         const hasDaily = Array.from(salesPeriod.options).some(function (option) {
-            return option.value.toLowerCase() === "daily";
+            return String(option.value).toLowerCase() === "daily";
         });
 
         if (!hasDaily) {
@@ -566,35 +560,47 @@ document.addEventListener("DOMContentLoaded", function () {
                 salesPeriod.firstElementChild
             );
         }
+
+        // Always select Daily when dashboard opens.
+        salesPeriod.value = "daily";
     }
 
     ensureDailySalesOption();
 
 
-    /* Get sales data based on selected period */
+    /* =================================================
+       GET CHART VALUES FROM BACKEND
+    ================================================= */
 
     function getChartValues(period) {
         const summary = getSummary();
 
-        const chartData = summary.salesChart || {};
+        const salesData = summary.sales || {};
+        const selectedData = salesData[period] || {};
 
-        const selectedData = Array.isArray(chartData[period])
-            ? chartData[period]
+        const labels = Array.isArray(selectedData.labels)
+            ? selectedData.labels
+            : [];
+
+        const values = Array.isArray(selectedData.values)
+            ? selectedData.values
             : [];
 
         return {
-            labels: selectedData.map(function (item) {
-                return String(item.label || "");
+            labels: labels.map(function (label) {
+                return String(label == null ? "" : label);
             }),
 
-            values: selectedData.map(function (item) {
-                return Number(item.total) || 0;
+            values: values.map(function (value) {
+                return Number(value) || 0;
             })
         };
     }
 
 
-    /* Chart colors */
+    /* =================================================
+       CHART COLORS
+    ================================================= */
 
     function getChartColors() {
         const isDark = body.classList.contains("dark-mode");
@@ -609,7 +615,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    /* Update chart colors when theme changes */
+    /* =================================================
+       UPDATE CHART THEME
+    ================================================= */
 
     function updateChartTheme() {
         if (!salesChart) return;
@@ -626,17 +634,24 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    /* Render sales chart */
+    /* =================================================
+       RENDER SALES CHART
+    ================================================= */
 
     function renderSalesChart() {
-        if (!salesChartCanvas ||
-            typeof window.Chart === "undefined") {
+        if (!salesChartCanvas) {
+            console.warn("Sales chart canvas not found.");
             return;
         }
 
-        const period = salesPeriod
+        if (typeof window.Chart === "undefined") {
+            console.error("Chart.js is not loaded.");
+            return;
+        }
+
+        const period = salesPeriod && salesPeriod.value
             ? salesPeriod.value.toLowerCase()
-            : "weekly";
+            : "daily";
 
         const chartData = getChartValues(period);
         const colors = getChartColors();
@@ -646,6 +661,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (salesChart) {
             salesChart.data.labels = chartData.labels;
+
             salesChart.data.datasets[0].data = chartData.values;
 
             salesChart.options.scales.x.ticks.color = colors.text;
@@ -670,17 +686,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 datasets: [{
                     label: "Sales",
+
                     data: chartData.values,
 
                     borderColor: "#19e51b",
                     backgroundColor: "rgba(25, 229, 27, 0.12)",
 
                     borderWidth: 2.5,
+
                     fill: true,
+
                     tension: 0.4,
 
                     pointRadius: 4,
                     pointHoverRadius: 6,
+
                     pointBackgroundColor: "#19e51b",
                     pointBorderColor: "#ffffff",
                     pointBorderWidth: 1
@@ -689,6 +709,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             options: {
                 responsive: true,
+
                 maintainAspectRatio: false,
 
                 interaction: {
@@ -755,10 +776,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             }
         });
+
+        console.log("Sales chart rendered:", period, chartData);
     }
 
 
-    /* Change chart when dropdown selection changes */
+    /* =================================================
+       SALES PERIOD DROPDOWN
+    ================================================= */
 
     if (salesPeriod) {
         salesPeriod.addEventListener("change", function () {

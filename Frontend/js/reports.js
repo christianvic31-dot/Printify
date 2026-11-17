@@ -331,13 +331,26 @@ document.addEventListener("DOMContentLoaded", function () {
     // 7. LOGOUT
     // =====================================================
 
-    logoutButton?.addEventListener("click", function () {
-        const confirmed = confirm("Are you sure you want to log out?");
+    async function handleReportsLogout(event) {
+        event.preventDefault();
+        if (!window.confirm("Are you sure you want to log out?")) return;
 
-        if (confirmed) {
-            (window.PrintifyAPI ? PrintifyAPI.logout() : (window.location.href = "login.html"));
+        if (!window.PrintifyAPI || typeof window.PrintifyAPI.logout !== "function") {
+            showToast("Logout service is unavailable. Please refresh and try again.", "error");
+            return;
         }
-    });
+
+        try {
+            await window.PrintifyAPI.logout();
+            // The shared PrintifyAPI logout function owns session cleanup and redirect.
+        } catch (error) {
+            console.error("Logout failed:", error);
+            showToast("Unable to log out. Please try again.", "error");
+        }
+    }
+
+    logoutButton?.addEventListener("click", handleReportsLogout);
+    document.getElementById("sidebarLogoutButton")?.addEventListener("click", handleReportsLogout);
 
     // =====================================================
     // 8. TOAST NOTIFICATION
@@ -985,8 +998,110 @@ document.addEventListener("DOMContentLoaded", function () {
     // 22. PRINT REPORT
     // =====================================================
 
+    // A4 print sheet styled like Printify's Staff QR identification printout.
     printReportButton?.addEventListener("click", function () {
-        window.print();
+        const records = getFilteredRecords();
+        const printWindow = window.open("", "_blank", "width=900,height=850");
+        if (!printWindow) {
+            showToast("Please allow pop-ups to print the report.", "error");
+            return;
+        }
+
+        const logoUrl = new URL("image/printify_logo.png", window.location.href).href;
+        const printedAt = new Date().toLocaleString("en-PH", {
+            year: "numeric", month: "long", day: "numeric",
+            hour: "numeric", minute: "2-digit"
+        });
+        const totalSales = records.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+        const completed = records.filter(r => r.orderStatus === "Completed").length;
+        const paid = records.filter(r => r.paymentStatus === "Paid").length;
+        const period = [startDate?.value, endDate?.value].filter(Boolean).join(" to ") || "All available dates";
+        const chartImage = salesChart ? salesChart.toBase64Image() : "";
+        const orderImage = orderChart ? orderChart.toBase64Image() : "";
+        const rows = records.map(r => `
+            <tr>
+                <td>${escapeHTML(r.orderId)}</td>
+                <td>${escapeHTML(r.customer)}</td>
+                <td>${escapeHTML(formatDate(r.date))}</td>
+                <td class="amount">${escapeHTML(formatCurrency(r.amount))}</td>
+                <td>${escapeHTML(r.orderStatus)}</td>
+                <td>${escapeHTML(r.paymentStatus)}</td>
+            </tr>`).join("");
+
+        printWindow.document.open();
+        printWindow.document.write(`<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<title>Printify | Official Sales Report</title>
+<style>
+@page { size: A4 portrait; margin: 15mm; }
+* { box-sizing: border-box; }
+body { margin: 0; background: white; color: #193b29; font-family: Arial, Helvetica, sans-serif; }
+.sheet { max-width: 760px; margin: auto; }
+.letterhead { display: flex; align-items: center; justify-content: space-between; gap: 20px;
+ padding: 12px 0 20px; border-bottom: 4px solid #176a39; }
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand img { width: 78px; height: 78px; object-fit: contain; }
+.brand-title { font-size: 26px; font-weight: 800; letter-spacing: 1.8px; color: #14532d; }
+.brand-sub { font-size: 10px; color: #5d7366; text-transform: uppercase; letter-spacing: 1.1px; margin-top: 5px; }
+.doc-type { text-align: right; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #14532d; }
+.doc-type small { display: block; color: #728277; font-size: 10px; font-weight: 400; margin-top: 7px; }
+.report-title { text-align: center; padding: 28px 0 22px; }
+.eyebrow { color: #237947; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+h1 { font-size: 25px; margin: 10px 0; color: #143e26; }
+.description { color: #6b7e70; font-size: 12px; }
+.summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0 24px; }
+.stat { background: #edf7ef; border: 1px solid #bdddc5; border-radius: 7px; padding: 13px; }
+.stat span { display: block; color: #607967; font-size: 10px; margin-bottom: 7px; }
+.stat strong { color: #14532d; font-size: 17px; }
+h2 { font-size: 15px; color: #14532d; margin: 22px 0 12px; }
+.charts { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; align-items: center; }
+.chart { border: 1px solid #d9e6dc; border-radius: 8px; padding: 10px; }
+.chart img { display: block; width: 100%; height: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 9px; }
+th { background: #edf7ef; color: #14532d; text-align: left; padding: 9px 6px; border-bottom: 2px solid #176a39; }
+td { padding: 8px 6px; border-bottom: 1px solid #e1eae3; overflow-wrap: anywhere; }
+tr { break-inside: avoid; } .amount { white-space: nowrap; }
+.empty { color: #718474; font-size: 11px; text-align: center; padding: 20px; }
+footer { border-top: 2px solid #176a39; margin-top: 30px; padding: 16px 0 4px;
+ display: flex; justify-content: space-between; gap: 15px; font-size: 10px; color: #687b6e; line-height: 1.7; }
+footer strong { color: #14532d; } .footer-right { text-align: right; }
+@media screen { body { background: #eaf0eb; padding: 24px; } .sheet { background: white; padding: 30px; box-shadow: 0 6px 30px #0001; } }
+@media print { .sheet { padding: 0; } .summary, .stat, th { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+</style></head><body>
+<div class="sheet">
+<header class="letterhead">
+ <div class="brand"><img src="${logoUrl}" alt="Printify logo"><div>
+ <div class="brand-title">PRINTIFY</div><div class="brand-sub">Printing Services &amp; Management</div></div></div>
+ <div class="doc-type">Official Business Report<small>Sales &amp; Orders Summary</small></div>
+</header>
+<section class="report-title"><div class="eyebrow">Printify Business Analytics</div>
+<h1>Sales &amp; Orders Report</h1><p class="description">Reporting period: ${escapeHTML(period)}</p></section>
+<section class="summary">
+ <div class="stat"><span>TOTAL SALES</span><strong>${escapeHTML(formatCurrency(totalSales))}</strong></div>
+ <div class="stat"><span>ORDERS</span><strong>${records.length}</strong></div>
+ <div class="stat"><span>COMPLETED / PAID</span><strong>${completed} / ${paid}</strong></div>
+</section>
+${chartImage || orderImage ? `<h2>Business Overview</h2><section class="charts">
+ ${chartImage ? `<div class="chart"><img src="${chartImage}" alt="Sales chart"></div>` : ""}
+ ${orderImage ? `<div class="chart"><img src="${orderImage}" alt="Order status chart"></div>` : ""}
+</section>` : ""}
+<h2>Sales History</h2>
+<table><thead><tr><th>Order ID</th><th>Customer</th><th>Date</th><th>Amount</th><th>Order Status</th><th>Payment</th></tr></thead>
+<tbody>${rows || `<tr><td colspan="6" class="empty">No matching records</td></tr>`}</tbody></table>
+<footer><div><strong>PRINTIFY • OFFICIAL DOCUMENT</strong><br>Sales and order information report.</div>
+<div class="footer-right">Date Printed: ${escapeHTML(printedAt)}<br>Generated from Printify Reports</div></footer>
+</div></body></html>`);
+        printWindow.document.close();
+        // Wait for the logo and chart images before opening the print dialog.
+        const images = Array.from(printWindow.document.images);
+        Promise.all(images.map(img => img.complete ? Promise.resolve() :
+            new Promise(resolve => { img.onload = resolve; img.onerror = resolve; })
+        )).then(() => {
+            if (!printWindow.closed) {
+                printWindow.focus();
+                printWindow.print();
+            }
+        });
     });
 
     // =====================================================

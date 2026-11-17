@@ -1925,3 +1925,153 @@ body:not(.light-mode) .table-container {
     backdrop-filter: blur(12px) saturate(140%);
     -webkit-backdrop-filter: blur(12px) saturate(140%);
 }
+
+/* STAFF DASHBOARD BREADCRUMB — compact and theme-aware */
+.dashboard-content > .staff-breadcrumb {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    width: fit-content;
+    max-width: 100%;
+    min-height: 36px;
+    margin: 0 0 20px;
+    padding: 9px 14px;
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    background: var(--glass);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+.dashboard-content > .staff-breadcrumb .staff-breadcrumb-parent {
+    color: var(--primary);
+}
+.dashboard-content > .staff-breadcrumb > i {
+    color: var(--text-muted);
+    font-size: 9px;
+}
+.dashboard-content > .staff-breadcrumb .staff-breadcrumb-current {
+    color: var(--text-primary);
+}
+body:not(.dark-mode) .dashboard-content > .staff-breadcrumb {
+    background: var(--glass);
+    border-color: var(--glass-border);
+}
+body.dark-mode .dashboard-content > .staff-breadcrumb {
+    background: var(--glass);
+    border-color: var(--glass-border);
+}
+
+/* STAFF DASHBOARD: SIDEBAR OPEN ON FIRST LOAD */
+body:not(.sidebar-hidden) .sidebar {transform:translateX(0);opacity:1;visibility:visible;pointer-events:auto;}
+body:not(.sidebar-hidden) .main-content {margin-left:calc(var(--sidebar-width) + 32px);width:calc(100% - var(--sidebar-width) - 48px);}
+body.sidebar-hidden .sidebar {transform:translateX(calc(-100% - 25px));opacity:0;visibility:hidden;pointer-events:none;}
+body.sidebar-hidden .main-content {margin-left:20px;width:calc(100% - 40px);}
+
+/* Clickable staff summary cards */
+.stats-grid > .stat-card { cursor: pointer; }
+.stats-grid > .stat-card:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+
+/* Native clickable staff summary links */
+.stats-grid > a.stat-card {display:block; color:inherit; text-decoration:none; cursor:pointer; position:relative; pointer-events:auto;}
+.stats-grid > a.stat-card:hover {text-decoration:none;}
+.stats-grid > a.stat-card:focus-visible {outline:3px solid var(--primary);outline-offset:3px;}
+
+
+/* ==========================================================
+   STAFF LIGHT MODE — MATCH INVENTORY DARK-GREEN APPEARANCE
+   Existing dark mode and functionality remain unchanged.
+   The staff JS sets/removes .dark-mode (not .light-mode).
+   ========================================================== */
+body:not(.dark-mode) {
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255,255,255,.84);
+    --text-muted: rgba(255,255,255,.65);
+    --glass: rgba(11,49,25,.88);
+    --glass-strong: rgba(8,42,20,.96);
+    --glass-light: rgba(255,255,255,.10);
+    --glass-border: rgba(190,230,195,.22);
+    --surface: rgba(10,48,24,.94);
+    --border: rgba(190,230,195,.22);
+    color:#fff;
+    background:#102a1c;
+}
+body:not(.dark-mode)::before {
+    filter: blur(2px) brightness(.78);
+}
+body:not(.dark-mode)::after {
+    background:rgba(4,25,12,.27);
+}
+body:not(.dark-mode) .sidebar {
+    background:rgba(8,43,20,.96);
+    border-color:rgba(190,230,195,.27);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+}
+body:not(.dark-mode) .topbar,
+body:not(.dark-mode) .panel,
+body:not(.dark-mode) .stat-card,
+body:not(.dark-mode) .staff-summary-card,
+body:not(.dark-mode) .dashboard-status,
+body:not(.dark-mode) .breadcrumb,
+body:not(.dark-mode) .dashboard-content > .staff-breadcrumb {
+    background:rgba(10,48,24,.91);
+    border-color:rgba(190,230,195,.23);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+}
+body:not(.dark-mode) .stat-card:hover,
+body:not(.dark-mode) .staff-summary-card:hover {
+    background:rgba(17,65,33,.95);
+    border-color:rgba(25,229,27,.45);
+}
+body:not(.dark-mode) .sidebar .nav-link.active {
+    color:#092712;
+    background:#19e51b;
+}
+body:not(.dark-mode) .sidebar .nav-link:not(.active) {
+    color:rgba(255,255,255,.83);
+}
+body:not(.dark-mode) .sidebar .nav-link:not(.active):hover {
+    color:#fff;
+    background:rgba(255,255,255,.12);
+}
+body:not(.dark-mode) .page-heading h1,
+body:not(.dark-mode) .content-introduction h2,
+body:not(.dark-mode) .section-heading h2,
+body:not(.dark-mode) .panel-header h2,
+body:not(.dark-mode) .stat-card h3,
+body:not(.dark-mode) .summary-information h3,
+body:not(.dark-mode) .breadcrumb-current,
+body:not(.dark-mode) .staff-breadcrumb-current {
+    color:#fff;
+}
+body:not(.dark-mode) .staff-table thead th {
+    background:rgba(255,255,255,.09);
+    color:rgba(255,255,255,.87);
+}
+body:not(.dark-mode) .staff-table tbody td {
+    color:rgba(255,255,255,.85);
+    border-color:rgba(255,255,255,.12);
+}
+body:not(.dark-mode) .chart-filter,
+body:not(.dark-mode) #orderSearch,
+body:not(.dark-mode) #orderStatusFilter {
+    color:#fff;
+    background:rgba(255,255,255,.09);
+    border-color:rgba(255,255,255,.22);
+}
+body:not(.dark-mode) #orderSearch::placeholder {
+    color:rgba(255,255,255,.68);
+}
+body:not(.dark-mode) .low-stock-item {
+    background:rgba(255,255,255,.06);
+}
+@media(max-width:900px){
+    body:not(.dark-mode) .sidebar {background:rgba(8,43,20,.98);}
+}

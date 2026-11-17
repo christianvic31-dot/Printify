@@ -24,7 +24,7 @@
     <script src="js/staff-orders.js" defer></script>
 </head>
 
-<body class="sidebar-hidden">
+<body class="light-mode">
 
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
@@ -50,7 +50,7 @@
             </a>
 
             <a href="staff-orders.html" class="nav-link active">
-                <img src="image/orders_icon.png" class="menu-icon" alt="">
+                <img src="image/order_icon.png" class="menu-icon" alt="">
                 <span>My Orders</span>
             </a>
 
@@ -138,7 +138,7 @@
                 </div>
 
                 <button class="icon-button theme-toggle" id="themeToggle"
-                        type="button" title="Switch theme">
+                        type="button" aria-label="Switch theme" title="Switch theme">
                     <img src="image/lightmode_icon.png" id="themeIcon"
                          class="theme-image-icon" alt="Theme">
                 </button>
@@ -198,20 +198,11 @@
 
         <!-- MY ORDERS CONTENT -->
         <section class="dashboard-content orders-content">
-
-            <div class="content-introduction">
-
-                <div>
-                    <h2>Order Overview</h2>
-                    <p>Monitor the progress of your assigned customer orders.</p>
-                </div>
-
-                <div class="dashboard-status">
-                    <span class="status-indicator"></span>
-                    Order Management
-                </div>
-
-            </div>
+            <nav class="staff-orders-breadcrumb" aria-label="Breadcrumb">
+                <a href="staff-dashboard.html">Staff Workspace</a>
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                <span aria-current="page">My Orders</span>
+            </nav>
 
             <!-- ORDERS SECTION -->
             <div class="section-heading orders-section-heading">
