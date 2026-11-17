@@ -65,6 +65,7 @@ public class OrdersController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var orders = await _db.PrintOrders.AsNoTracking()
+            .Where(o => o.ArchivedAt == null)
             .OrderByDescending(o => o.CreatedAt)
             .ToListAsync();
 
@@ -83,6 +84,7 @@ public class OrdersController : ControllerBase
 
         var orders = await _db.PrintOrders.AsNoTracking()
             .Where(o => o.AssignedStaffId == me)
+            .Where(o => o.ArchivedAt == null)
             .OrderByDescending(o => o.CreatedAt)
             .ToListAsync();
 
@@ -131,7 +133,7 @@ public class OrdersController : ControllerBase
     {
         var order = await _db.PrintOrders.FirstOrDefaultAsync(o => o.Id == id);
 
-        if (order == null)
+        if (order == null || order.ArchivedAt != null)
             return NotFound(new { message = "Order not found." });
 
         if (request == null)
@@ -173,14 +175,49 @@ public class OrdersController : ControllerBase
     {
         var order = await _db.PrintOrders.FirstOrDefaultAsync(o => o.Id == id);
 
-        if (order == null)
+        if (order == null || order.ArchivedAt != null)
             return NotFound(new { message = "Order not found." });
 
-        _db.PrintOrders.Remove(order);
-        Audit.Add(_db, User, "Order deleted", id);
+        order.ArchivedAt = DateTime.UtcNow;
+        Audit.Add(_db, User, "Order archived", id);
         await _db.SaveChangesAsync();
 
-        return Ok(new { message = "Order deleted." });
+        return Ok(new { message = "Order archived." });
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet("archived")]
+    public async Task<IActionResult> GetArchived()
+    {
+        var orders = await _db.PrintOrders.AsNoTracking()
+            .Where(o => o.ArchivedAt != null)
+            .OrderByDescending(o => o.ArchivedAt)
+            .ToListAsync();
+        return Ok(new { items = orders.Select(o => ToDto(o, new Dictionary<Guid, string>())) });
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost("{id}/restore")]
+    public async Task<IActionResult> Restore(string id)
+    {
+        var order = await _db.PrintOrders.FirstOrDefaultAsync(o => o.Id == id && o.ArchivedAt != null);
+        if (order == null) return NotFound(new { message = "Archived order not found." });
+        order.ArchivedAt = null;
+        Audit.Add(_db, User, "Order restored", id);
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Order restored.", order = ToDto(order, await StaffNames()) });
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("{id}/permanent")]
+    public async Task<IActionResult> PermanentDelete(string id)
+    {
+        var order = await _db.PrintOrders.FirstOrDefaultAsync(o => o.Id == id && o.ArchivedAt != null);
+        if (order == null) return NotFound(new { message = "Archived order not found." });
+        _db.PrintOrders.Remove(order);
+        Audit.Add(_db, User, "Order permanently deleted", id);
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Order permanently deleted." });
     }
 
     /* ---------- STATUS (Staff: sariling order lang) ---------- */
@@ -198,7 +235,7 @@ public class OrdersController : ControllerBase
         var order = await _db.PrintOrders.FirstOrDefaultAsync(o => o.Id == id);
 
         // Parehong 404 kapag hindi niya order, para hindi malaman kung may ganoong ID.
-        if (order == null || (!isAdmin && order.AssignedStaffId != CurrentUserId))
+        if (order == null || order.ArchivedAt != null || (!isAdmin && order.AssignedStaffId != CurrentUserId))
             return NotFound(new { message = "Order not found." });
 
         if (!isAdmin && order.OrderStatus == "Cancelled")
@@ -344,6 +381,7 @@ public class OrdersController : ControllerBase
         assignedStaffId = o.AssignedStaffId,
         assignedStaffName = o.AssignedStaffId != null && names.TryGetValue(o.AssignedStaffId.Value, out var n) ? n : "",
         createdAt = o.CreatedAt,
+        archivedAt = o.ArchivedAt,
         updatedAt = o.UpdatedAt
     };
 }

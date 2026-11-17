@@ -76,6 +76,7 @@ public abstract class ListItem
 
 public class InventoryItem : ListItem
 {
+    public DateTime? ArchivedAt { get; set; }
     [Key]
     public string Id { get; set; }          // hal. "PRD-001"
     public string Name { get; set; }
@@ -198,6 +199,7 @@ public class ActivityLog
 
 public class PrintOrder
 {
+    public DateTime? ArchivedAt { get; set; }
     [Key]
     public string Id { get; set; }              // hal. "ORD-1001"
     public string CustomerName { get; set; }

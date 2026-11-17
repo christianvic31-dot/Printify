@@ -21,6 +21,8 @@ public static class DbBootstrap
                 last_sent_at timestamptz NOT NULL,
                 failed_attempts integer NOT NULL DEFAULT 0
             );
+            ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS archived_at timestamptz;
+            ALTER TABLE print_orders ADD COLUMN IF NOT EXISTS archived_at timestamptz;
             ALTER TABLE users ADD COLUMN IF NOT EXISTS staff_code text;
             ALTER TABLE users ADD COLUMN IF NOT EXISTS phone text;
             ALTER TABLE users ADD COLUMN IF NOT EXISTS ""position"" text;

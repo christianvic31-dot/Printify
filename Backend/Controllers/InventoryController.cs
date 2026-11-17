@@ -51,6 +51,7 @@ public class InventoryController : ControllerBase
     public async Task<IActionResult> List()
     {
         var items = await _db.InventoryItems.AsNoTracking()
+            .Where(i => i.ArchivedAt == null)
             .OrderBy(i => i.SortOrder).ThenBy(i => i.Name)
             .ToListAsync();
 
@@ -91,7 +92,7 @@ public class InventoryController : ControllerBase
     public async Task<IActionResult> Update(string id, [FromBody] InventoryRequest r)
     {
         var item = await _db.InventoryItems.FirstOrDefaultAsync(i => i.Id == id);
-        if (item == null) return NotFound(new { message = "Item not found." });
+        if (item == null || item.ArchivedAt != null) return NotFound(new { message = "Item not found." });
 
         var error = Validate(r);
         if (error != null) return BadRequest(new { message = error });
@@ -113,13 +114,48 @@ public class InventoryController : ControllerBase
     public async Task<IActionResult> Delete(string id)
     {
         var item = await _db.InventoryItems.FirstOrDefaultAsync(i => i.Id == id);
-        if (item == null) return NotFound(new { message = "Item not found." });
+        if (item == null || item.ArchivedAt != null) return NotFound(new { message = "Item not found." });
 
-        _db.InventoryItems.Remove(item);   // stock history is removed by the FK cascade
-        Audit.Add(_db, User, "Inventory item deleted", $"{item.Id} {item.Name}");
+        item.ArchivedAt = DateTime.UtcNow;
+        Audit.Add(_db, User, "Inventory item archived", $"{item.Id} {item.Name}");
         await _db.SaveChangesAsync();
 
-        return Ok(new { message = "Item deleted." });
+        return Ok(new { message = "Item archived." });
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet("archived")]
+    public async Task<IActionResult> GetArchived()
+    {
+        var items = await _db.InventoryItems.AsNoTracking()
+            .Where(i => i.ArchivedAt != null)
+            .OrderByDescending(i => i.ArchivedAt)
+            .ToListAsync();
+        return Ok(new { items });
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost("{id}/restore")]
+    public async Task<IActionResult> Restore(string id)
+    {
+        var item = await _db.InventoryItems.FirstOrDefaultAsync(i => i.Id == id && i.ArchivedAt != null);
+        if (item == null) return NotFound(new { message = "Archived product not found." });
+        item.ArchivedAt = null;
+        Audit.Add(_db, User, "Inventory item restored", id);
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Product restored.", item });
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("{id}/permanent")]
+    public async Task<IActionResult> PermanentDelete(string id)
+    {
+        var item = await _db.InventoryItems.FirstOrDefaultAsync(i => i.Id == id && i.ArchivedAt != null);
+        if (item == null) return NotFound(new { message = "Archived product not found." });
+        _db.InventoryItems.Remove(item);
+        Audit.Add(_db, User, "Inventory item permanently deleted", id);
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Product permanently deleted." });
     }
 
     [Authorize(Roles = "Admin")]
@@ -134,7 +170,7 @@ public class InventoryController : ControllerBase
             return BadRequest(new { message = "Quantity must be greater than zero." });
 
         var item = await _db.InventoryItems.FirstOrDefaultAsync(i => i.Id == id);
-        if (item == null) return NotFound(new { message = "Item not found." });
+        if (item == null || item.ArchivedAt != null) return NotFound(new { message = "Item not found." });
 
         var delta = type == "In" ? r.Quantity : -r.Quantity;
 
