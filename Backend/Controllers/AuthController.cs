@@ -472,15 +472,48 @@ public class AuthController : ControllerBase
                 ExpiresAt = DateTime.UtcNow.AddHours(1)
             });
 
-            await _db.SaveChangesAsync();
-
-            // Wala pang email service, kaya sa console ipinapakita ang reset link.
-            var link = $"{Request.Scheme}://{Request.Host}/reset-password.html?token={token}";
-            _logger.LogWarning("PASSWORD RESET for {Email}: {Link}", email, link);
+            // Never print reset tokens or links to application logs.
+            // Reuse the configured Gmail SMTP credentials for secure delivery.
+            var link = $"{Request.Scheme}://{Request.Host}/reset-password.html?token={Uri.EscapeDataString(token)}";
+            try
+            {
+                await SendPasswordResetEmail(email, link);
+                await _db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unable to deliver password reset email.");
+                // Do not reveal whether the requested email belongs to an account.
+            }
         }
 
         // Parehong sagot kahit walang account (para hindi ma-guess ang mga email).
         return Ok(new { message = "If that email is registered, reset instructions have been sent." });
+    }
+
+    private async Task SendPasswordResetEmail(string recipient, string link)
+    {
+        var username = _configuration["Smtp:Username"];
+        var password = _configuration["Smtp:AppPassword"];
+        var sender = _configuration["Smtp:FromEmail"];
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(sender))
+            throw new InvalidOperationException("Password reset email is not configured.");
+
+        var host = _configuration["Smtp:Host"] ?? "smtp.gmail.com";
+        var port = int.TryParse(_configuration["Smtp:Port"], out var parsed) ? parsed : 587;
+        using var message = new MailMessage(sender, recipient)
+        {
+            Subject = "Printify - Reset your password",
+            Body = $"Use this link to reset your Printify password (expires in 1 hour):\\n{link}\\nIf you did not request this, ignore this email."
+        };
+        using var client = new SmtpClient(host, port)
+        {
+            EnableSsl = true,
+            Credentials = new NetworkCredential(username, password),
+            DeliveryMethod = SmtpDeliveryMethod.Network,
+            Timeout = 15000
+        };
+        await client.SendMailAsync(message);
     }
 
     /* ---------- RESET PASSWORD ---------- */
