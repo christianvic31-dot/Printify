@@ -111,8 +111,8 @@ public class OrdersController : ControllerBase
         {
             request.AssignedStaffId = await NextActiveStaffId();
 
-            if (request.AssignedStaffId == null)
-                return Conflict(new { message = "No active staff member is available to receive this order." });
+            // Allow an unassigned order when no active staff exists.
+            // Admin can assign it later; Staff will only see assigned orders.
         }
 
         var order = new PrintOrder { Id = request.Id.Trim(), CreatedAt = DateTime.UtcNow };
@@ -150,10 +150,9 @@ public class OrdersController : ControllerBase
 
         if (request.AssignedStaffId == null)
         {
-            request.AssignedStaffId = await NextActiveStaffId();
-
-            if (request.AssignedStaffId == null)
-                return Conflict(new { message = "No active staff member is available to receive this order." });
+            // Preserve the existing assignment during an ordinary order edit.
+            // Do not silently reassign it to another staff member.
+            request.AssignedStaffId = order.AssignedStaffId;
         }
 
         Apply(order, request);
@@ -323,6 +322,9 @@ public class OrdersController : ControllerBase
 
         if (r.Quantity <= 0 || r.UnitPrice < 0 || r.AmountPaid < 0)
             return "Quantity, price and amount paid must be valid numbers.";
+
+        if (r.AmountPaid > Math.Round(r.Quantity * r.UnitPrice, 2))
+            return "Amount paid cannot exceed the order total.";
 
         if (!AllStatuses.Contains(r.OrderStatus ?? ""))
             return "Invalid order status.";
